@@ -8,8 +8,7 @@ using namespace nr;
 
 int main(int argc, char* argv[])
 {
-	try
-	{
+	//try{
 		boost::asio::io_service service;
 		//boost::asio::io_service::work work(service);
 		int server_port = 54321;
@@ -22,55 +21,47 @@ int main(int argc, char* argv[])
 		std::cout << "accept port is " << server_port << std::endl;
 		
 		boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
-	
-		while(true)
-		{
-			try
-			{
-				const auto command = utl::GetInput<std::string>("command?:");
-				if(command == "connect")
-				{
-					const auto hostname = utl::GetInput<std::string>("hostname?:");
-					const auto port = utl::GetInput<int>("port?:");	
+	/*
+	}
+	catch(std::exception& e){
+		std::cout << "before main loop, error occured: " << e.what() << std::endl;
+		exit(0);
+	}
+	*/
+	while(true){ //main loop
+		try{
+			const auto command = utl::GetInput<std::string>("command?:");
+			if(command == "connect"){
+				const auto hostname = utl::GetInput<std::string>("hostname?:");
+				const auto port = utl::GetInput<int>("port?:");	
 
-					node.Connect(hostname, port);
-				}	
-				else if(command == "broadcast")
-				{
-					const auto message = utl::GetInput<std::string>("message?:");
-					std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-					node.Broadcast(msg);
-				}
-				else if(command == "close")
-				{
-					const auto session_index = utl::GetInput<unsigned int>("sesion index?:");
-					node.CloseSession(session_index);
-				}
-				else if(command == "session")
-				{
-					std::cout << node.GetSessionListStr() << std::endl;
-				}
-				else if(command == "exit" || command == "quit")
-				{
-					//std::cout << node.GetSessionListStr() << std::endl;
-					exit(0);
-				}
-				else
-				{
-					std::cout << "invalid command." << std::endl;	
-				}
+				node.Connect(hostname, port);
+			}	
+			else if(command == "broadcast"){
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				node.Broadcast(msg);
 			}
-			catch(std::exception& e)
-			{
-				std::cout << "error!!!:" << e.what() << std::endl;	
+			else if(command == "close"){
+				const auto session_index = utl::GetInput<unsigned int>("sesion index?:");
+				node.CloseSession(session_index);
+			}
+			else if(command == "session"){
+				std::cout << node.GetSessionListStr() << std::endl;
+			}
+			else if(command == "exit" || command == "quit"){
+				//std::cout << node.GetSessionListStr() << std::endl;
+				exit(0);
+			}
+			else{
+				std::cout << "invalid command." << std::endl;	
 			}
 		}
-		t.join();
+		catch(std::exception& e){
+			std::cout << "error!!!:" << e.what() << std::endl;	
+		}
 	}
-	catch(std::exception& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
+	t.join();
 	
 
     return 0;

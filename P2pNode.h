@@ -55,8 +55,10 @@ public:
 		);	
 	}
 
-	auto Broadcast(const utl::ByteArray& byte_array) -> void {	
+	auto Broadcast(const utl::ByteArray& byte_array) -> void {
 		std::cout << "broadcast" << std::endl;
+		this->broadcast_byte_array = byte_array; // for refusing linux bad address error.
+
 		if(!session_pool_ptr->IsEmpty()){
 			for(auto& session : *session_pool_ptr){
 				service.dispatch(boost::bind(&SessionBase::Send, session, byte_array));
@@ -122,6 +124,7 @@ private:
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
 	SessionPool::Pointer session_pool_ptr;
+	utl::ByteArray broadcast_byte_array;
 };
 
 }

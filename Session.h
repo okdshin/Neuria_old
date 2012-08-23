@@ -17,7 +17,12 @@ class Session : public SessionBase, public boost::enable_shared_from_this<Sessio
 {
 public:
 	using Pointer = boost::shared_ptr<Session>;
-	
+
+	~Session()
+	{
+		std::cout << "session deleted." << std::endl;	
+	}
+
 	static auto Create(
 		boost::asio::io_service& service, SessionPool::Pointer pool) -> Session::Pointer 
 	{
@@ -65,7 +70,8 @@ private:
 		);
 	}
 
-	auto HandleReceive(const boost::system::error_code& error_code, std::size_t bytes_transferred)
+	auto HandleReceive(
+		const boost::system::error_code& error_code, std::size_t bytes_transferred)
 	-> void {
 		std::cout << "handle receive" << std::endl;
 		if(!error_code){
@@ -106,13 +112,18 @@ private:
 				this->DoHandleSend();
 			}
 		}
+		else if(error_code == boost::system::errc::connection_reset)
+		{
+			std::cout << "reseted ?" << std::endl;	
+		}
 		else{
-			std::cout << "send failed" << std::endl;	
+			std::cout << "send failed. error code is "<< error_code.message() << std::endl;	
 		}
 	}
 
 	auto DoClose() -> void {
 		std::cout << GetAddressStr(shared_from_this()) << " closed" << std::endl;
+		//this->sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 		this->sock.close();
 		this->pool->Erase(shared_from_this());
 	}

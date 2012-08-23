@@ -13,9 +13,6 @@ int main(int argc, char* argv[])
 	service.run();
 	session->StartReceive();	
 	
-	while(true)
-	{
-	}
     return 0;
 }
 
