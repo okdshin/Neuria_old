@@ -6,6 +6,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/function.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "Utility.h"
 #include "SessionPool.h"
@@ -24,9 +25,10 @@ public:
 	}
 
 	static auto Create(
-		boost::asio::io_service& service, SessionPool::Pointer pool) -> Session::Pointer 
+		boost::asio::io_service& service, SessionPool::Pointer pool, 
+		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func) -> Session::Pointer 
 	{
-		return boost::shared_ptr<Session>(new Session(service, pool));
+		return Pointer(new Session(service, pool, on_receive_func));
 	}
 
 	auto GetSocketRef() -> boost::asio::ip::tcp::socket& {
@@ -54,8 +56,9 @@ public:
 	}
 
 private:
-	Session(boost::asio::io_service& service, SessionPool::Pointer pool)
-		:sock(service), pool(pool){}
+	Session(boost::asio::io_service& service, SessionPool::Pointer pool, 
+		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func)
+			:sock(service), pool(pool), on_receive_func(on_receive_func), received_byte_array(100){}
 
 	auto DoHandleReceive() -> void {
 		std::cout << "do handle receive" << std::endl;
@@ -78,6 +81,10 @@ private:
 			std::cout << "received:";
 			std::cout.write(&received_byte_array.front(), bytes_transferred);
 			std::cout << std::endl;
+			
+			this->sock.get_io_service().dispatch(
+				boost::bind(this->on_receive_func, shared_from_this(), received_byte_array));
+			
 			DoHandleReceive();
 		}
 		else if(this->sock.is_open()){ //peer socket closed
@@ -130,7 +137,9 @@ private:
 
 	boost::asio::ip::tcp::socket sock;
 	SessionPool::Pointer pool;
-	std::array<char, 100> received_byte_array;
+	boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func;
+	//std::array<char, 100> 
+	utl::ByteArray received_byte_array;
 	std::deque<utl::ByteArray> send_byte_array_queue;
 
 };

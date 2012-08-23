@@ -8,26 +8,25 @@ using namespace nr;
 
 int main(int argc, char* argv[])
 {
-	//try{
-		boost::asio::io_service service;
-		//boost::asio::io_service::work work(service);
-		int server_port = 54321;
-		if(argc == 2)
-		{
-			server_port = boost::lexical_cast<int>(argv[1]);
-		}
+	boost::asio::io_service service;
+	//boost::asio::io_service::work work(service);
+	int server_port = 54321;
+	if(argc == 2)
+	{
+		server_port = boost::lexical_cast<int>(argv[1]);
+	}
 
-		P2pNode node(service, server_port);
-		std::cout << "accept port is " << server_port << std::endl;
-		
-		boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
-	/*
-	}
-	catch(std::exception& e){
-		std::cout << "before main loop, error occured: " << e.what() << std::endl;
-		exit(0);
-	}
-	*/
+	P2pNode node(service, server_port, 
+		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func
+			std::string str(byte_array.begin(), byte_array.end());
+			std::cout << "onreceive called:" << str << std::endl;
+			//session->Send(byte_array);
+		}
+	);
+
+	std::cout << "accept port is " << server_port << std::endl;
+	
+	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
 	while(true){ //main loop
 		try{
 			const auto command = utl::GetInput<std::string>("command?:");

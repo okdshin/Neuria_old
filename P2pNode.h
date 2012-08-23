@@ -16,16 +16,21 @@ namespace nr
 class P2pNode
 {
 public:
-	P2pNode(boost::asio::io_service& service, int port)
+	using OnReceiveFunc = boost::function<void (Session::Pointer, const utl::ByteArray&)>;
+
+	P2pNode(boost::asio::io_service& service, int port, OnReceiveFunc on_receive_func)
 		:service(service), 
 		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+		on_receive_func(on_receive_func),
 		session_pool_ptr(SessionPool::Create())
 	{
 		this->StartAccept();
 	}
 
 	auto StartAccept() -> void {
-		auto new_session = Session::Create(this->service, this->session_pool_ptr);
+		//auto new_session = Session::Create(this->service, this->session_pool_ptr);
+		auto new_session = this->CreateSession();
+
 		this->acceptor.async_accept(
 			new_session->GetSocketRef(),
 			boost::bind(
@@ -44,7 +49,7 @@ public:
 			hostname, boost::lexical_cast<std::string>(port));
 		auto endpoint_iter = resolver.resolve(query);
 
-		auto new_session = Session::Create(this->service, this->session_pool_ptr);
+		auto new_session = this->CreateSession();
 		boost::asio::async_connect(
 			new_session->GetSocketRef(),
 			endpoint_iter,
@@ -88,6 +93,12 @@ public:
 	}
 
 private:
+	auto CreateSession() -> Session::Pointer
+	{
+		return Session::Create(
+			this->service, this->session_pool_ptr, this->on_receive_func);
+	}
+
 	auto HandleAccept(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
@@ -123,6 +134,7 @@ private:
 
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
+	OnReceiveFunc on_receive_func;
 	SessionPool::Pointer session_pool_ptr;
 	utl::ByteArray broadcast_byte_array;
 };
