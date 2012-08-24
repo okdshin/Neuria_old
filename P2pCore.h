@@ -16,24 +16,18 @@ namespace nr
 class P2pCore
 {
 public:
+	using Pointer = boost::shared_ptr<P2pCore>;
 	using OnReceiveFunc = boost::function<void (Session::Pointer, const utl::ByteArray&)>;
-
-	P2pCore(boost::asio::io_service& service, int port, 
-			OnReceiveFunc on_receive_from_upper_func,
-			OnReceiveFunc on_receive_from_lower_func)
-		:service(service), 
-		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-		on_receive_from_upper_func(on_receive_from_upper_func),
-		on_receive_from_lower_func(on_receive_from_lower_func),
-		upper_session_pool_ptr(SessionPool::Create()),
-		lower_session_pool_ptr(SessionPool::Create())
-	{
-		this->StartAccept();
+	
+	static auto Create(boost::asio::io_service& service, int port, 
+			OnReceiveFunc from_upper_func,
+			OnReceiveFunc from_lower_func) -> Pointer {
+		return Pointer(new P2pCore(service, port, from_upper_func, from_lower_func));	
 	}
 
 	auto StartAccept() -> void {
 		auto new_lower_session = Session::Create(
-			this->service, this->lower_session_pool_ptr, this->on_receive_from_lower_func);
+			this->service, this->lower_session_pool_ptr, this->from_lower_func);
 
 		this->acceptor.async_accept(
 			new_lower_session->GetSocketRef(),
@@ -54,7 +48,7 @@ public:
 		auto endpoint_iter = resolver.resolve(query);
 
 		auto new_upper_session = Session::Create(
-			this->service, this->upper_session_pool_ptr, this->on_receive_from_upper_func);
+			this->service, this->upper_session_pool_ptr, this->from_upper_func);
 		boost::asio::async_connect(
 			new_upper_session->GetSocketRef(),
 			endpoint_iter,
@@ -123,6 +117,19 @@ public:
 	}
 
 private:
+	P2pCore(boost::asio::io_service& service, int port, 
+			OnReceiveFunc from_upper_func,
+			OnReceiveFunc from_lower_func)
+		:service(service), 
+		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+		from_upper_func(from_upper_func),
+		from_lower_func(from_lower_func),
+		upper_session_pool_ptr(SessionPool::Create()),
+		lower_session_pool_ptr(SessionPool::Create())
+	{
+		this->StartAccept();
+	}
+	
 	auto HandleAccept(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
@@ -159,8 +166,8 @@ private:
 
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
-	OnReceiveFunc on_receive_from_upper_func;
-	OnReceiveFunc on_receive_from_lower_func;
+	OnReceiveFunc from_upper_func;
+	OnReceiveFunc from_lower_func;
 	SessionPool::Pointer upper_session_pool_ptr;
 	SessionPool::Pointer lower_session_pool_ptr;
 	utl::ByteArray broadcast_byte_array;

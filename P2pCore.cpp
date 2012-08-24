@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 		server_port = boost::lexical_cast<int>(argv[1]);
 	}
 
-	P2pCore node(service, server_port, 
+	auto core_ptr = P2pCore::Create(service, server_port, 
 		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM UPPER called:" << str << std::endl;
@@ -38,25 +38,25 @@ int main(int argc, char* argv[])
 				const auto hostname = utl::GetInput<std::string>("hostname?:");
 				const auto port = utl::GetInput<int>("port?:");	
 
-				node.Connect(hostname, port);
+				core_ptr->Connect(hostname, port);
 			}	
 			else if(command == "broadcast"){
 				const auto message = utl::GetInput<std::string>("message?:");
 				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				node.BroadcastToUpper(msg);
-				node.BroadcastToLower(msg);
+				core_ptr->BroadcastToUpper(msg);
+				core_ptr->BroadcastToLower(msg);
 			}
 			else if(command == "upper")
 			{
 				const auto message = utl::GetInput<std::string>("message?:");
 				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				node.BroadcastToUpper(msg);	
+				core_ptr->BroadcastToUpper(msg);	
 			}
 			else if(command == "lower")
 			{
 				const auto message = utl::GetInput<std::string>("message?:");
 				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				node.BroadcastToLower(msg);	
+				core_ptr->BroadcastToLower(msg);	
 			}
 			else if(command == "close"){
 				const auto which = utl::GetInput<std::string>("upper or lower?:");
@@ -67,14 +67,14 @@ int main(int argc, char* argv[])
 				else{
 					const auto session_index = 
 						utl::GetInput<unsigned int>("sesion index?:");
-					node.CloseLowerSession(session_index);	
+					core_ptr->CloseLowerSession(session_index);	
 				}
 			}
 			else if(command == "session"){
-				std::cout << node.GetSessionListStr() << std::endl;
+				std::cout << core_ptr->GetSessionListStr() << std::endl;
 			}
 			else if(command == "exit" || command == "quit"){
-				//std::cout << node.GetSessionListStr() << std::endl;
+				//std::cout << core_ptr->GetSessionListStr() << std::endl;
 				exit(0);
 			}
 			else{
