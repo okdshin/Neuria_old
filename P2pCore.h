@@ -1,5 +1,5 @@
 #pragma once
-//P2pNodeCore:20120816
+//P2pCore:20120816
 #include <iostream>
 #include <vector>
 //#include <jsoncpp/json.h>
@@ -13,12 +13,12 @@
 namespace nr
 {
 
-class P2pNodeCore
+class P2pCore
 {
 public:
 	using OnReceiveFunc = boost::function<void (Session::Pointer, const utl::ByteArray&)>;
 
-	P2pNodeCore(boost::asio::io_service& service, int port, OnReceiveFunc on_receive_func)
+	P2pCore(boost::asio::io_service& service, int port, OnReceiveFunc on_receive_func)
 		:service(service), 
 		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
 		on_receive_func(on_receive_func),
@@ -33,7 +33,7 @@ public:
 		this->acceptor.async_accept(
 			new_session->GetSocketRef(),
 			boost::bind(
-				&P2pNodeCore::HandleAccept, this, new_session,
+				&P2pCore::HandleAccept, this, new_session,
 				boost::asio::placeholders::error
 			)
 		);
@@ -53,7 +53,7 @@ public:
 			new_session->GetSocketRef(),
 			endpoint_iter,
 			boost::bind(
-				&P2pNodeCore::HandleConnect, this, new_session,
+				&P2pCore::HandleConnect, this, new_session,
 				boost::asio::placeholders::error
 			)
 		);	

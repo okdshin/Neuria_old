@@ -1,5 +1,5 @@
-#ifdef P2PNODECORE_UNIT_TEST
-#include "P2pNodeCore.h"
+#ifdef P2PCORE_UNIT_TEST
+#include "P2pCore.h"
 #include <iostream>
 #include <boost/thread/thread.hpp>
 #include "Utility.h"
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 		server_port = boost::lexical_cast<int>(argv[1]);
 	}
 
-	P2pNodeCore node(service, server_port, 
+	P2pCore node(service, server_port, 
 		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive called:" << str << std::endl;
