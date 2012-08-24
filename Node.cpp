@@ -1,8 +1,6 @@
-#ifdef P2PCORE_UNIT_TEST
-#include "P2pCore.h"
+#ifdef NODE_UNIT_TEST
+#include "Node.h"
 #include <iostream>
-#include <boost/thread/thread.hpp>
-#include "Utility.h"
 
 using namespace nr;
 
@@ -15,19 +13,28 @@ int main(int argc, char* argv[])
 		server_port = boost::lexical_cast<int>(argv[1]);
 	}
 
-	auto core_ptr = P2pCore::Create(service, server_port, 
-		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func from upper
+	auto node = Node(service, server_port, 
+		[](P2pCore::Pointer core, Session::Pointer session, 
+				const utl::ByteArray& byte_array){ //on receive func from upper
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM UPPER called:" << str << std::endl;
-			//session->Send(byte_array);
+			std::cout << core->GetSessionListStr() << std::endl;
 		},
-		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func from lower
+		[](P2pCore::Pointer core, Session::Pointer session, 
+				const utl::ByteArray& byte_array){ //on receive func from lower
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
 			//session->Send(byte_array);
+			core->BroadcastToUpper(byte_array);
+			/*
+			core->Connect(
+				session->GetSocketRef().remote_endpoint().address().to_string(), 
+				session->GetSocketRef().remote_endpoint().port());
+			*/
 		}
 	);
 
+	auto core_ptr = node.GetCorePtr();
 	std::cout << "accept port is " << server_port << std::endl;
 	
 	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
@@ -87,7 +94,7 @@ int main(int argc, char* argv[])
 	}
 	t.join();
 	
-
     return 0;
 }
+
 #endif
