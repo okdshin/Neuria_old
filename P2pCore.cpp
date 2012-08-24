@@ -18,7 +18,12 @@ int main(int argc, char* argv[])
 	P2pCore node(service, server_port, 
 		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func
 			std::string str(byte_array.begin(), byte_array.end());
-			std::cout << "onreceive called:" << str << std::endl;
+			std::cout << "onreceive FROM UPPER called:" << str << std::endl;
+			//session->Send(byte_array);
+		},
+		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func
+			std::string str(byte_array.begin(), byte_array.end());
+			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
 			//session->Send(byte_array);
 		}
 	);
@@ -38,11 +43,32 @@ int main(int argc, char* argv[])
 			else if(command == "broadcast"){
 				const auto message = utl::GetInput<std::string>("message?:");
 				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				node.Broadcast(msg);
+				node.BroadcastToUpper(msg);
+				node.BroadcastToLower(msg);
+			}
+			else if(command == "upper")
+			{
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				node.BroadcastToUpper(msg);	
+			}
+			else if(command == "lower")
+			{
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				node.BroadcastToLower(msg);	
 			}
 			else if(command == "close"){
-				const auto session_index = utl::GetInput<unsigned int>("sesion index?:");
-				node.CloseSession(session_index);
+				const auto which = utl::GetInput<std::string>("upper or lower?:");
+				if(which != "upper" || which != "lower"){
+					std::cout << 
+						"invalid.(please input \"upper\" or \"lower\")" << std::endl;	
+				}
+				else{
+					const auto session_index = 
+						utl::GetInput<unsigned int>("sesion index?:");
+					node.CloseLowerSession(session_index);	
+				}
 			}
 			else if(command == "session"){
 				std::cout << node.GetSessionListStr() << std::endl;

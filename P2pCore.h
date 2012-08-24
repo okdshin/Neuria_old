@@ -18,22 +18,27 @@ class P2pCore
 public:
 	using OnReceiveFunc = boost::function<void (Session::Pointer, const utl::ByteArray&)>;
 
-	P2pCore(boost::asio::io_service& service, int port, OnReceiveFunc on_receive_func)
+	P2pCore(boost::asio::io_service& service, int port, 
+			OnReceiveFunc on_receive_from_upper_func,
+			OnReceiveFunc on_receive_from_lower_func)
 		:service(service), 
 		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-		on_receive_func(on_receive_func),
-		session_pool_ptr(SessionPool::Create())
+		on_receive_from_upper_func(on_receive_from_upper_func),
+		on_receive_from_lower_func(on_receive_from_lower_func),
+		upper_session_pool_ptr(SessionPool::Create()),
+		lower_session_pool_ptr(SessionPool::Create())
 	{
 		this->StartAccept();
 	}
 
 	auto StartAccept() -> void {
-		auto new_session = this->CreateSession();
+		auto new_lower_session = Session::Create(
+			this->service, this->lower_session_pool_ptr, this->on_receive_from_lower_func);
 
 		this->acceptor.async_accept(
-			new_session->GetSocketRef(),
+			new_lower_session->GetSocketRef(),
 			boost::bind(
-				&P2pCore::HandleAccept, this, new_session,
+				&P2pCore::HandleAccept, this, new_lower_session,
 				boost::asio::placeholders::error
 			)
 		);
@@ -48,23 +53,25 @@ public:
 			hostname, boost::lexical_cast<std::string>(port));
 		auto endpoint_iter = resolver.resolve(query);
 
-		auto new_session = this->CreateSession();
+		auto new_upper_session = Session::Create(
+			this->service, this->upper_session_pool_ptr, this->on_receive_from_upper_func);
 		boost::asio::async_connect(
-			new_session->GetSocketRef(),
+			new_upper_session->GetSocketRef(),
 			endpoint_iter,
 			boost::bind(
-				&P2pCore::HandleConnect, this, new_session,
+				&P2pCore::HandleConnect, this, new_upper_session,
 				boost::asio::placeholders::error
 			)
 		);	
 	}
 
-	auto Broadcast(const utl::ByteArray& byte_array) -> void {
-		std::cout << "broadcast" << std::endl;
+	auto BroadcastToUpper(const utl::ByteArray& byte_array) -> void {
+		std::cout << "broadcast TO UPPER" << std::endl;
+
 		this->broadcast_byte_array = byte_array; // for refusing linux bad address error.
 
-		if(!session_pool_ptr->IsEmpty()){
-			for(auto& session : *session_pool_ptr){
+		if(!upper_session_pool_ptr->IsEmpty()){
+			for(auto& session : *upper_session_pool_ptr){
 				service.dispatch(boost::bind(&SessionBase::Send, session, byte_array));
 			}
 		}
@@ -73,14 +80,39 @@ public:
 		}
 	}
 
-	auto CloseSession(unsigned int index) -> void {
-		session_pool_ptr->At(index)->Close();
+	auto BroadcastToLower(const utl::ByteArray& byte_array) -> void {
+		std::cout << "broadcast TO LOWER" << std::endl;
+
+		this->broadcast_byte_array = byte_array; // for refusing linux bad address error.
+
+		if(!lower_session_pool_ptr->IsEmpty()){
+			for(auto& session : *lower_session_pool_ptr){
+				service.dispatch(boost::bind(&SessionBase::Send, session, byte_array));
+			}
+		}
+		else{
+			std::cout << "no peer. broadcast failed." << std::endl;	
+		}
+	}
+	
+	auto CloseUpperSession(unsigned int index) -> void {
+		upper_session_pool_ptr->At(index)->Close();
+	}
+
+	auto CloseLowerSession(unsigned int index) -> void {
+		lower_session_pool_ptr->At(index)->Close();
 	}
 
 	auto GetSessionListStr() -> std::string {
-		if(!session_pool_ptr->IsEmpty()){
+		if(!upper_session_pool_ptr->IsEmpty() || !lower_session_pool_ptr->IsEmpty()){
 			std::vector<std::string> integrated;
-			for(auto& session : *session_pool_ptr){
+			integrated.push_back("upper:");
+			for(auto& session : *upper_session_pool_ptr){
+				integrated.push_back(GetAddressStr(session));
+			}
+
+			integrated.push_back("\nlower:");	
+			for(auto& session : *lower_session_pool_ptr){
 				integrated.push_back(GetAddressStr(session));
 			}
 			return utl::StrJoin(integrated, " ");
@@ -91,12 +123,6 @@ public:
 	}
 
 private:
-	auto CreateSession() -> Session::Pointer
-	{
-		return Session::Create(
-			this->service, this->session_pool_ptr, this->on_receive_func);
-	}
-
 	auto HandleAccept(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
@@ -104,10 +130,10 @@ private:
 	-> void {
 		if(!error_code){
 			std::cout << "accept:" << GetAddressStr(session) << std::endl;
-			session_pool_ptr->Add(session);
+			this->lower_session_pool_ptr->Add(session);
 			session->StartReceive();
-			std::cout << "session_queue size:" 
-				<< this->session_pool_ptr->GetSize() << std::endl;
+			std::cout << "lower session_queue size:" 
+				<< this->lower_session_pool_ptr->GetSize() << std::endl;
 		}
 		else{
 			std::cout << "accept failure" << std::endl;		
@@ -121,8 +147,10 @@ private:
 	) 
 	-> void {
 		if(!error_code){
-			this->session_pool_ptr->Add(session);
+			this->upper_session_pool_ptr->Add(session);
 			session->StartReceive();
+			std::cout << "upper session_queue size:" 
+				<< this->upper_session_pool_ptr->GetSize() << std::endl;
 		}
 		else{
 			std::cout << "connect failure." << std::endl;	
@@ -131,8 +159,10 @@ private:
 
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
-	OnReceiveFunc on_receive_func;
-	SessionPool::Pointer session_pool_ptr;
+	OnReceiveFunc on_receive_from_upper_func;
+	OnReceiveFunc on_receive_from_lower_func;
+	SessionPool::Pointer upper_session_pool_ptr;
+	SessionPool::Pointer lower_session_pool_ptr;
 	utl::ByteArray broadcast_byte_array;
 };
 
