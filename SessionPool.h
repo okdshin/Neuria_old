@@ -2,8 +2,9 @@
 //SessionPool:20120822
 #include <iostream>
 #include <algorithm>
-#include <set>
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+#include "Utility.h"
 #include "SessionBase.h"
 
 namespace nr
@@ -50,6 +51,21 @@ private:
 	SessionPool():sessions(){}
 	std::vector<SessionBase::Pointer> sessions;
 };
+
+auto Broadcast(boost::asio::io_service& service, SessionPool::Pointer session_pool_ptr, 
+		const utl::ByteArray& byte_array) -> void {	
+	if(!session_pool_ptr->IsEmpty()){
+		for(auto& session : *session_pool_ptr){
+			service.post(
+				boost::bind(&SessionBase::Send, session, byte_array));
+		}
+	}
+	else{
+		std::cout << "no peer. broadcast failed." << std::endl;	
+	}
+}
+
+
 
 }
 

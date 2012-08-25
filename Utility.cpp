@@ -1,4 +1,4 @@
-#ifdef UNIT_TEST
+#ifdef UTILITY_UNIT_TEST
 #include "Utility.h"
 #include <iostream>
 

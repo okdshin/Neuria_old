@@ -15,7 +15,8 @@ int main(int argc, char* argv[])
 		server_port = boost::lexical_cast<int>(argv[1]);
 	}
 
-	auto core_ptr = P2pCore::Create(service, server_port, 
+	const int buffer_size = 128;
+	auto core_ptr = P2pCore::Create(service, server_port, buffer_size, 
 		[](P2pCore::Pointer core, Session::Pointer session, 
 				const utl::ByteArray& byte_array){ //on receive func from upper
 			std::string str(byte_array.begin(), byte_array.end());

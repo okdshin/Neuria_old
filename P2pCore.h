@@ -19,18 +19,18 @@ public:
 	using Pointer = boost::shared_ptr<P2pCore>;
 	using OnReceiveFunc = boost::function<void (P2pCore::Pointer, Session::Pointer, const utl::ByteArray&)>;
 	
-	static auto Create(boost::asio::io_service& service, int port, 
+	static auto Create(boost::asio::io_service& service, int port, int buffer_size, 
 			OnReceiveFunc from_upper_func,
 			OnReceiveFunc from_lower_func) -> Pointer {
 		auto created = Pointer(
-			new P2pCore(service, port, from_upper_func, from_lower_func));	
+			new P2pCore(service, port, buffer_size, from_upper_func, from_lower_func));	
 		created->StartAccept();
 		return created;
 	}
 
 
 	auto Connect(const std::string& hostname, int port) -> void {
-		std::cout << "connecting..." << std::endl;
+		DEBUG_PRINT("connectiong...", 50);
 
 		boost::asio::ip::tcp::resolver resolver(this->service); //名前解決
 		auto query = boost::asio::ip::tcp::resolver::query(
@@ -45,43 +45,29 @@ public:
 			new_upper_session->GetSocketRef(),
 			endpoint_iter,
 			boost::bind(
-				&P2pCore::HandleConnect, shared_from_this(), new_upper_session,
+				&P2pCore::OnConnect, shared_from_this(), new_upper_session,
 				boost::asio::placeholders::error
 			)
 		);	
 	}
 
 	auto BroadcastToUpper(const utl::ByteArray& byte_array) -> void {
-		std::cout << "broadcast TO UPPER" << std::endl;
-		if(!upper_session_pool_ptr->IsEmpty()){
-			for(auto& session : *upper_session_pool_ptr){
-				service.post(
-					boost::bind(&SessionBase::Send, session, byte_array));
-			}
-		}
-		else{
-			std::cout << "no peer. broadcast failed." << std::endl;	
-		}
+		DEBUG_PRINT("broadcast TO UPPER", 50);
+		Broadcast(this->service, this->upper_session_pool_ptr, byte_array);
 	}
 
 	auto BroadcastToLower(const utl::ByteArray& byte_array) -> void {
-		std::cout << "broadcast TO LOWER" << std::endl;
-		if(!lower_session_pool_ptr->IsEmpty()){
-			for(auto& session : *lower_session_pool_ptr){
-				service.post(
-					boost::bind(&SessionBase::Send, session, byte_array));
-			}
-		}
-		else{
-			std::cout << "no peer. broadcast failed." << std::endl;	
-		}
+		DEBUG_PRINT("broadcast TO LOWER", 50);
+		Broadcast(this->service, this->lower_session_pool_ptr, byte_array);
 	}
 	
 	auto CloseUpperSession(unsigned int index) -> void {
+		DEBUG_PRINT("close upper session", 50);
 		upper_session_pool_ptr->At(index)->Close();
 	}
 
 	auto CloseLowerSession(unsigned int index) -> void {
+		DEBUG_PRINT("close upper session", 50);
 		lower_session_pool_ptr->At(index)->Close();
 	}
 
@@ -105,11 +91,12 @@ public:
 	}
 
 private:
-	P2pCore(boost::asio::io_service& service, int port, 
+	P2pCore(boost::asio::io_service& service, int port, int buffer_size,
 			OnReceiveFunc from_upper_func,
 			OnReceiveFunc from_lower_func)
 		:service(service), 
 		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+		buffer_size(buffer_size),
 		from_upper_func(from_upper_func),
 		from_lower_func(from_lower_func),
 		upper_session_pool_ptr(SessionPool::Create()),
@@ -124,13 +111,13 @@ private:
 		this->acceptor.async_accept(
 			new_lower_session->GetSocketRef(),
 			boost::bind(
-				&P2pCore::HandleAccept, shared_from_this(), new_lower_session,
+				&P2pCore::OnAccept, shared_from_this(), new_lower_session,
 				boost::asio::placeholders::error
 			)
 		);
 	}
 
-	auto HandleAccept(
+	auto OnAccept(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
 	) 
@@ -148,7 +135,7 @@ private:
 		this->StartAccept();
 	}
 	
-	auto HandleConnect(
+	auto OnConnect(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
 	) 
@@ -166,6 +153,7 @@ private:
 
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
+	int buffer_size;
 	OnReceiveFunc from_upper_func;
 	OnReceiveFunc from_lower_func;
 	SessionPool::Pointer upper_session_pool_ptr;
