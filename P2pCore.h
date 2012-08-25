@@ -13,7 +13,7 @@
 namespace nr
 {
 
-class P2pCore
+class P2pCore : public boost::enable_shared_from_this<P2pCore>
 {
 public:
 	using Pointer = boost::shared_ptr<P2pCore>;
@@ -22,21 +22,12 @@ public:
 	static auto Create(boost::asio::io_service& service, int port, 
 			OnReceiveFunc from_upper_func,
 			OnReceiveFunc from_lower_func) -> Pointer {
-		return Pointer(new P2pCore(service, port, from_upper_func, from_lower_func));	
+		auto created = Pointer(
+			new P2pCore(service, port, from_upper_func, from_lower_func));	
+		created->StartAccept();
+		return created;
 	}
 
-	auto StartAccept() -> void {
-		auto new_lower_session = Session::Create(
-			this->service, this->lower_session_pool_ptr, this->from_lower_func);
-
-		this->acceptor.async_accept(
-			new_lower_session->GetSocketRef(),
-			boost::bind(
-				&P2pCore::HandleAccept, this, new_lower_session,
-				boost::asio::placeholders::error
-			)
-		);
-	}
 
 	auto Connect(const std::string& hostname, int port) -> void {
 		std::cout << "connecting..." << std::endl;
@@ -53,7 +44,7 @@ public:
 			new_upper_session->GetSocketRef(),
 			endpoint_iter,
 			boost::bind(
-				&P2pCore::HandleConnect, this, new_upper_session,
+				&P2pCore::HandleConnect, shared_from_this(), new_upper_session,
 				boost::asio::placeholders::error
 			)
 		);	
@@ -126,10 +117,21 @@ private:
 		from_lower_func(from_lower_func),
 		upper_session_pool_ptr(SessionPool::Create()),
 		lower_session_pool_ptr(SessionPool::Create())
-	{
-		this->StartAccept();
-	}
+	{}
 	
+	auto StartAccept() -> void {
+		auto new_lower_session = Session::Create(
+			this->service, this->lower_session_pool_ptr, this->from_lower_func);
+
+		this->acceptor.async_accept(
+			new_lower_session->GetSocketRef(),
+			boost::bind(
+				&P2pCore::HandleAccept, shared_from_this(), new_lower_session,
+				boost::asio::placeholders::error
+			)
+		);
+	}
+
 	auto HandleAccept(
 		Session::Pointer session, 
 		const boost::system::error_code& error_code
@@ -172,6 +174,66 @@ private:
 	SessionPool::Pointer lower_session_pool_ptr;
 	utl::ByteArray broadcast_byte_array;
 };
+
+auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void
+{
+	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
+	while(true){ //main loop
+		try{
+			const auto command = utl::GetInput<std::string>("command?:");
+			if(command == "connect"){
+				const auto hostname = utl::GetInput<std::string>("hostname?:");
+				const auto port = utl::GetInput<int>("port?:");	
+
+				core_ptr->Connect(hostname, port);
+			}	
+			else if(command == "broadcast"){
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				core_ptr->BroadcastToUpper(msg);
+				core_ptr->BroadcastToLower(msg);
+			}
+			else if(command == "upper")
+			{
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				core_ptr->BroadcastToUpper(msg);	
+			}
+			else if(command == "lower")
+			{
+				const auto message = utl::GetInput<std::string>("message?:");
+				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
+				core_ptr->BroadcastToLower(msg);	
+			}
+			else if(command == "close"){
+				const auto which = utl::GetInput<std::string>("upper or lower?:");
+				if(which != "upper" && which != "lower"){
+					std::cout << 
+						"invalid.(please input \"upper\" or \"lower\")" << std::endl;	
+				}
+				else{
+					const auto session_index = 
+						utl::GetInput<unsigned int>("sesion index?:");
+					core_ptr->CloseLowerSession(session_index);	
+				}
+			}
+			else if(command == "session"){
+				std::cout << core_ptr->GetSessionListStr() << std::endl;
+			}
+			else if(command == "exit" || command == "quit"){
+				//std::cout << core_ptr->GetSessionListStr() << std::endl;
+				exit(0);
+			}
+			else{
+				std::cout << "invalid command." << std::endl;	
+			}
+		}
+		catch(std::exception& e){
+			std::cout << "error!!!:" << e.what() << std::endl;	
+		}
+	}
+	t.join();	
+}
 
 }
 

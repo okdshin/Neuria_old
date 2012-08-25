@@ -30,63 +30,7 @@ int main(int argc, char* argv[])
 
 	std::cout << "accept port is " << server_port << std::endl;
 	
-	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
-	while(true){ //main loop
-		try{
-			const auto command = utl::GetInput<std::string>("command?:");
-			if(command == "connect"){
-				const auto hostname = utl::GetInput<std::string>("hostname?:");
-				const auto port = utl::GetInput<int>("port?:");	
-
-				core_ptr->Connect(hostname, port);
-			}	
-			else if(command == "broadcast"){
-				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				core_ptr->BroadcastToUpper(msg);
-				core_ptr->BroadcastToLower(msg);
-			}
-			else if(command == "upper")
-			{
-				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				core_ptr->BroadcastToUpper(msg);	
-			}
-			else if(command == "lower")
-			{
-				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				core_ptr->BroadcastToLower(msg);	
-			}
-			else if(command == "close"){
-				const auto which = utl::GetInput<std::string>("upper or lower?:");
-				if(which != "upper" || which != "lower"){
-					std::cout << 
-						"invalid.(please input \"upper\" or \"lower\")" << std::endl;	
-				}
-				else{
-					const auto session_index = 
-						utl::GetInput<unsigned int>("sesion index?:");
-					core_ptr->CloseLowerSession(session_index);	
-				}
-			}
-			else if(command == "session"){
-				std::cout << core_ptr->GetSessionListStr() << std::endl;
-			}
-			else if(command == "exit" || command == "quit"){
-				//std::cout << core_ptr->GetSessionListStr() << std::endl;
-				exit(0);
-			}
-			else{
-				std::cout << "invalid command." << std::endl;	
-			}
-		}
-		catch(std::exception& e){
-			std::cout << "error!!!:" << e.what() << std::endl;	
-		}
-	}
-	t.join();
-	
+	P2pCoreTestCuiApp(service, core_ptr);
 
     return 0;
 }
