@@ -19,10 +19,10 @@ public:
 		from_upper_func(from_upper_func),
 		from_lower_func(from_lower_func){}
 
-	auto GetCorePtr() -> P2pCore::Pointer
-	{
+	auto GetCorePtr() -> P2pCore::Pointer {
 		return this->core_ptr;	
 	}
+
 private:
 	auto OnReceiveFromUpperFunc(Session::Pointer session, 
 			const utl::ByteArray& received_byte_array) -> void {
