@@ -13,24 +13,25 @@
 namespace nr
 {
 
-class P2pCore : public boost::enable_shared_from_this<P2pCore>
-{
+class P2pCore : public boost::enable_shared_from_this<P2pCore> {
 public:
 	using Pointer = boost::shared_ptr<P2pCore>;
-	using OnReceiveFunc = boost::function<void (P2pCore::Pointer, Session::Pointer, const utl::ByteArray&)>;
+	using OnReceiveFunc = boost::function<
+		void (P2pCore::Pointer, Session::Pointer, const utl::ByteArray&)>;
 	
 	static auto Create(boost::asio::io_service& service, int port, int buffer_size, 
 			OnReceiveFunc from_upper_func,
-			OnReceiveFunc from_lower_func) -> Pointer {
+			OnReceiveFunc from_lower_func,
+			std::ostream& os) -> Pointer {
 		auto created = Pointer(
-			new P2pCore(service, port, buffer_size, from_upper_func, from_lower_func));	
+			new P2pCore(service, port, buffer_size, from_upper_func, from_lower_func, os));	
 		created->StartAccept();
 		return created;
 	}
 
 
 	auto Connect(const std::string& hostname, int port) -> void {
-		DEBUG_PRINT("connectiong...", 50);
+		this->os << "connectiong..." << std::endl;
 
 		boost::asio::ip::tcp::resolver resolver(this->service); //名前解決
 		auto query = boost::asio::ip::tcp::resolver::query(
@@ -39,7 +40,7 @@ public:
 
 		auto new_upper_session = Session::Create(
 			this->service, this->upper_session_pool_ptr, 
-			boost::bind(this->from_upper_func, shared_from_this(), _1, _2));
+			boost::bind(this->from_upper_func, shared_from_this(), _1, _2), this->os);
 
 		boost::asio::async_connect(
 			new_upper_session->GetSocketRef(),
@@ -52,22 +53,22 @@ public:
 	}
 
 	auto BroadcastToUpper(const utl::ByteArray& byte_array) -> void {
-		DEBUG_PRINT("broadcast TO UPPER", 50);
+		this->os << "broadcast TO UPPER" << std::endl;
 		Broadcast(this->service, this->upper_session_pool_ptr, byte_array);
 	}
 
 	auto BroadcastToLower(const utl::ByteArray& byte_array) -> void {
-		DEBUG_PRINT("broadcast TO LOWER", 50);
+		this->os << "broadcast TO LOWER" << std::endl;
 		Broadcast(this->service, this->lower_session_pool_ptr, byte_array);
 	}
 	
 	auto CloseUpperSession(unsigned int index) -> void {
-		DEBUG_PRINT("close upper session", 50);
+		this->os << "close upper session" << std::endl;
 		upper_session_pool_ptr->At(index)->Close();
 	}
 
 	auto CloseLowerSession(unsigned int index) -> void {
-		DEBUG_PRINT("close upper session", 50);
+		this->os << "close lower session" << std::endl;
 		lower_session_pool_ptr->At(index)->Close();
 	}
 
@@ -93,20 +94,21 @@ public:
 private:
 	P2pCore(boost::asio::io_service& service, int port, int buffer_size,
 			OnReceiveFunc from_upper_func,
-			OnReceiveFunc from_lower_func)
+			OnReceiveFunc from_lower_func,
+			std::ostream& os)
 		:service(service), 
 		acceptor(service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
 		buffer_size(buffer_size),
 		from_upper_func(from_upper_func),
 		from_lower_func(from_lower_func),
 		upper_session_pool_ptr(SessionPool::Create()),
-		lower_session_pool_ptr(SessionPool::Create())
-	{}
+		lower_session_pool_ptr(SessionPool::Create()),
+		os(os){}
 	
 	auto StartAccept() -> void {
 		auto new_lower_session = Session::Create(
 			this->service, this->lower_session_pool_ptr, 
-			boost::bind(this->from_lower_func, shared_from_this(), _1, _2));
+			boost::bind(this->from_lower_func, shared_from_this(), _1, _2), this->os);
 
 		this->acceptor.async_accept(
 			new_lower_session->GetSocketRef(),
@@ -123,14 +125,14 @@ private:
 	) 
 	-> void {
 		if(!error_code){
-			std::cout << "accept:" << GetAddressStr(session) << std::endl;
+			this->os << "accept:" << GetAddressStr(session) << std::endl;
 			this->lower_session_pool_ptr->Add(session);
 			session->StartReceive();
-			std::cout << "lower session_queue size:" 
+			this->os <<  "lower session_queue size:" 
 				<< this->lower_session_pool_ptr->GetSize() << std::endl;
 		}
 		else{
-			std::cout << "accept failure" << std::endl;		
+			this->os << "accept failure" << std::endl;		
 		}
 		this->StartAccept();
 	}
@@ -143,11 +145,11 @@ private:
 		if(!error_code){
 			this->upper_session_pool_ptr->Add(session);
 			session->StartReceive();
-			std::cout << "upper session_queue size:" 
+			this->os << "upper session_queue size:" 
 				<< this->upper_session_pool_ptr->GetSize() << std::endl;
 		}
 		else{
-			std::cout << "connect failure." << std::endl;	
+			this->os << "connect failure." << std::endl;	
 		}
 	}
 
@@ -158,6 +160,7 @@ private:
 	OnReceiveFunc from_lower_func;
 	SessionPool::Pointer upper_session_pool_ptr;
 	SessionPool::Pointer lower_session_pool_ptr;
+	std::ostream& os;
 };
 
 auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void

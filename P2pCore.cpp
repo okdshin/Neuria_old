@@ -1,4 +1,5 @@
 #ifdef P2PCORE_UNIT_TEST
+#define DEBUG_LEVEL 60
 #include "P2pCore.h"
 #include <iostream>
 #include <boost/thread/thread.hpp>
@@ -27,7 +28,8 @@ int main(int argc, char* argv[])
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
 			core->BroadcastToUpper(byte_array);
-		}
+		},
+		std::cout
 	);
 
 	std::cout << "accept port is " << server_port << std::endl;

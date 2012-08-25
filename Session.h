@@ -21,14 +21,15 @@ public:
 
 	~Session()
 	{
-		std::cout << "session deleted." << std::endl;	
+		this->os << "session deleted." << std::endl;	
 	}
 
 	static auto Create(
 		boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
-		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func) -> Session::Pointer 
+		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func, 
+		std::ostream& os) -> Session::Pointer 
 	{
-		return Pointer(new Session(service, pool_ptr, on_receive_func));
+		return Pointer(new Session(service, pool_ptr, on_receive_func, os));
 	}
 
 	auto GetSocketRef() -> boost::asio::ip::tcp::socket& {
@@ -36,16 +37,16 @@ public:
 	}
 
 	auto StartReceive() -> void {
-		std::cout << "start receive" << std::endl;
-		DoHandleReceive();
+		this->os << "start receive" << std::endl;
+		DoOnReceive();
 	}
 
 	auto Send(const utl::ByteArray& byte_array) -> void {	
-		std::cout << "send" << std::endl;
+		this->os << "send" << std::endl;
 		bool is_empty = this->send_byte_array_queue.empty();
 		this->send_byte_array_queue.push_back(byte_array);
 		if(is_empty) { //start new
-			this->DoHandleSend();
+			this->DoOnSend();
 		}
 	}
 
@@ -56,17 +57,19 @@ public:
 
 private:
 	Session(boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
-		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func)
+		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func,
+		std::ostream& os)
 			:sock(service), pool_ptr(pool_ptr), 
 			on_receive_func(on_receive_func), received_byte_array(100), 
-			handle_send_strand(service){}
+			on_send_strand(service),
+			os(os){}
 
-	auto DoHandleReceive() -> void {
-		std::cout << "do handle receive" << std::endl;
+	auto DoOnReceive() -> void {
+		this->os << "do on receive" << std::endl;
 		this->sock.async_read_some(
 			boost::asio::buffer(received_byte_array),
 			boost::bind(
-				&Session::HandleReceive, 
+				&Session::OnReceive, 
 				shared_from_this(),
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred
@@ -74,65 +77,65 @@ private:
 		);
 	}
 
-	auto HandleReceive(
+	auto OnReceive(
 		const boost::system::error_code& error_code, std::size_t bytes_transferred)
 	-> void {
-		std::cout << "handle receive" << std::endl;
+		this->os << "on receive" << std::endl;
 		if(!error_code){
-			std::cout << "received:";
-			std::cout.write(&received_byte_array.front(), bytes_transferred);
-			std::cout << std::endl;
+			this->os << "received:";
+			this->os.write(&received_byte_array.front(), bytes_transferred);
+			this->os << std::endl;
 			
 			this->sock.get_io_service().dispatch(
 				boost::bind(this->on_receive_func, shared_from_this(), received_byte_array));
 			
-			DoHandleReceive();
+			DoOnReceive();
 		}
 		else if(this->sock.is_open()){ //peer socket closed
-			std::cout << "handle receive error. maybe peer socket close." << std::endl;
+			this->os << "on receive error. maybe peer socket close." << std::endl;
 			this->Close();	
 		}
 		else{ //self socket closed
-			std::cout << "receiving stop" << std::endl;
+			this->os << "receiving stop" << std::endl;
 		}
 		
 	}
 
-	auto DoHandleSend() -> void {
+	auto DoOnSend() -> void {
 		boost::asio::async_write(
 			this->sock, 
 			boost::asio::buffer(
 				&send_byte_array_queue.front().front(), 
 				send_byte_array_queue.front().size()
 			),
-			this->handle_send_strand.wrap(boost::bind(
-				&Session::HandleSend,
+			this->on_send_strand.wrap(boost::bind(
+				&Session::OnSend,
 				shared_from_this(), 
 				boost::asio::placeholders::error
 			))
 		);
 	}
 
-	auto HandleSend(const boost::system::error_code& error_code) -> void {
+	auto OnSend(const boost::system::error_code& error_code) -> void {
 		if(!error_code){
 			if(!this->send_byte_array_queue.empty()){
 				this->send_byte_array_queue.pop_front();
 				if(!this->send_byte_array_queue.empty()){
-					this->DoHandleSend();
+					this->DoOnSend();
 				}
 			}
 		}
 		else if(error_code == boost::system::errc::connection_reset)
 		{
-			std::cout << "reseted ?" << std::endl;	
+			this->os << "reseted ?" << std::endl;	
 		}
 		else{
-			std::cout << "send failed. error code is "<< error_code.message() << std::endl;	
+			this->os << "send failed. error code is "<< error_code.message() << std::endl;	
 		}
 	}
 
 	auto DoClose() -> void {
-		std::cout << GetAddressStr(shared_from_this()) << " closed" << std::endl;
+		this->os << GetAddressStr(shared_from_this()) << " closed" << std::endl;
 		//this->sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 		this->sock.close();
 		this->pool_ptr->Erase(shared_from_this());
@@ -144,7 +147,8 @@ private:
 	//std::array<char, 100> 
 	utl::ByteArray received_byte_array;
 	std::deque<utl::ByteArray> send_byte_array_queue;
-	boost::asio::strand handle_send_strand;
+	boost::asio::strand on_send_strand;
+	std::ostream& os;
 
 };
 
