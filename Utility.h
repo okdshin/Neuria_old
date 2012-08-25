@@ -4,22 +4,6 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
-//#define DEBUG_MODE
-//#define DEBUG_LEVEL 3
-#ifdef DEBUG_MODE
-#ifndef DEBUG_LEVEL
-#define DEBUG_LEVEL 0
-#endif
-#define DEBUG_PRINT(message, level) \
-{ \
-	if(DEBUG_LEVEL < level){ \
-		std::cout << message << ":" << __FILE__ << ":" << __LINE__ << std::endl; \
-	}\
-}
-#else
-#define DEBUG_PRINT(message)
-#endif
-
 namespace utl
 {
 using ByteArray = std::vector<char>;
@@ -27,7 +11,7 @@ using ByteArray = std::vector<char>;
 template<class ValueType>
 auto GetInput(const std::string& prompt) -> ValueType
 {
-	//DEBUG_PRINT("debug message", 4);
+	//DEBUG_STREAM(50) << "hello" << 55 << std::endl;
 	std::cout << prompt << std::flush;
 	std::string input;
 	std::getline(std::cin, input);
@@ -42,7 +26,6 @@ auto GetInput(const std::string& prompt) -> ValueType
 	}
 }
 
-
 auto StrJoin(const std::vector<std::string>& str_vect, std::string delim) -> std::string
 {
 	auto integrated = str_vect.front();
@@ -53,5 +36,24 @@ auto StrJoin(const std::vector<std::string>& str_vect, std::string delim) -> std
 	return integrated;
 }
 
+
+class DebugOutStream
+{
+public:
+	DebugOutStream();
+	void SetIsEnable(bool is_enable)
+	{
+		this->is_enable = is_enable;	
+	}
+
+	bool IsEnable()const
+	{
+		return this->is_enable;	
+	}
+
+private:
+	std::ostream& DebugOut;
+	bool is_enable;
+};
 }
 
