@@ -19,17 +19,15 @@ class Session : public SessionBase, public boost::enable_shared_from_this<Sessio
 public:
 	using Pointer = boost::shared_ptr<Session>;
 
-	~Session()
-	{
-		this->os << "session deleted." << std::endl;	
+	~Session(){
+		this->os << "session deleted." << std::endl;
 	}
 
 	static auto Create(
-		boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
+		boost::asio::io_service& service, SessionPool::Pointer pool_ptr, int buffer_size,
 		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func, 
-		std::ostream& os) -> Session::Pointer 
-	{
-		return Pointer(new Session(service, pool_ptr, on_receive_func, os));
+		std::ostream& os) -> Session::Pointer {
+		return Pointer(new Session(service, pool_ptr, buffer_size, on_receive_func, os));
 	}
 
 	auto GetSocketRef() -> boost::asio::ip::tcp::socket& {
@@ -57,10 +55,11 @@ public:
 
 private:
 	Session(boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
+		int buffer_size,
 		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func,
 		std::ostream& os)
 			:sock(service), pool_ptr(pool_ptr), 
-			on_receive_func(on_receive_func), received_byte_array(100), 
+			on_receive_func(on_receive_func), received_byte_array(buffer_size), 
 			on_send_strand(service),
 			os(os){}
 
@@ -98,7 +97,6 @@ private:
 		else{ //self socket closed
 			this->os << "receiving stop" << std::endl;
 		}
-		
 	}
 
 	auto DoOnSend() -> void {

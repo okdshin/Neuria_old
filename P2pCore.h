@@ -39,7 +39,7 @@ public:
 		auto endpoint_iter = resolver.resolve(query);
 
 		auto new_upper_session = Session::Create(
-			this->service, this->upper_session_pool_ptr, 
+			this->service, this->upper_session_pool_ptr, this->buffer_size, 
 			boost::bind(this->from_upper_func, shared_from_this(), _1, _2), this->os);
 
 		boost::asio::async_connect(
@@ -107,7 +107,7 @@ private:
 	
 	auto StartAccept() -> void {
 		auto new_lower_session = Session::Create(
-			this->service, this->lower_session_pool_ptr, 
+			this->service, this->lower_session_pool_ptr, this->buffer_size,
 			boost::bind(this->from_lower_func, shared_from_this(), _1, _2), this->os);
 
 		this->acceptor.async_accept(
