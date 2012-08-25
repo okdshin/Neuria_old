@@ -17,7 +17,7 @@ class P2pCore : public boost::enable_shared_from_this<P2pCore>
 {
 public:
 	using Pointer = boost::shared_ptr<P2pCore>;
-	using OnReceiveFunc = boost::function<void (Session::Pointer, const utl::ByteArray&)>;
+	using OnReceiveFunc = boost::function<void (P2pCore::Pointer, Session::Pointer, const utl::ByteArray&)>;
 	
 	static auto Create(boost::asio::io_service& service, int port, 
 			OnReceiveFunc from_upper_func,
@@ -32,14 +32,15 @@ public:
 	auto Connect(const std::string& hostname, int port) -> void {
 		std::cout << "connecting..." << std::endl;
 
-		//名前解決
-		boost::asio::ip::tcp::resolver resolver(this->service);
+		boost::asio::ip::tcp::resolver resolver(this->service); //名前解決
 		auto query = boost::asio::ip::tcp::resolver::query(
 			hostname, boost::lexical_cast<std::string>(port));
 		auto endpoint_iter = resolver.resolve(query);
 
 		auto new_upper_session = Session::Create(
-			this->service, this->upper_session_pool_ptr, this->from_upper_func);
+			this->service, this->upper_session_pool_ptr, 
+			boost::bind(this->from_upper_func, shared_from_this(), _1, _2));
+
 		boost::asio::async_connect(
 			new_upper_session->GetSocketRef(),
 			endpoint_iter,
@@ -52,12 +53,10 @@ public:
 
 	auto BroadcastToUpper(const utl::ByteArray& byte_array) -> void {
 		std::cout << "broadcast TO UPPER" << std::endl;
-
-		this->broadcast_byte_array = byte_array; // for refusing linux bad address error.
-
 		if(!upper_session_pool_ptr->IsEmpty()){
 			for(auto& session : *upper_session_pool_ptr){
-				service.dispatch(boost::bind(&SessionBase::Send, session, byte_array));
+				service.post(
+					boost::bind(&SessionBase::Send, session, byte_array));
 			}
 		}
 		else{
@@ -67,12 +66,10 @@ public:
 
 	auto BroadcastToLower(const utl::ByteArray& byte_array) -> void {
 		std::cout << "broadcast TO LOWER" << std::endl;
-
-		this->broadcast_byte_array = byte_array; // for refusing linux bad address error.
-
 		if(!lower_session_pool_ptr->IsEmpty()){
 			for(auto& session : *lower_session_pool_ptr){
-				service.dispatch(boost::bind(&SessionBase::Send, session, byte_array));
+				service.post(
+					boost::bind(&SessionBase::Send, session, byte_array));
 			}
 		}
 		else{
@@ -121,7 +118,8 @@ private:
 	
 	auto StartAccept() -> void {
 		auto new_lower_session = Session::Create(
-			this->service, this->lower_session_pool_ptr, this->from_lower_func);
+			this->service, this->lower_session_pool_ptr, 
+			boost::bind(this->from_lower_func, shared_from_this(), _1, _2));
 
 		this->acceptor.async_accept(
 			new_lower_session->GetSocketRef(),
@@ -172,7 +170,6 @@ private:
 	OnReceiveFunc from_lower_func;
 	SessionPool::Pointer upper_session_pool_ptr;
 	SessionPool::Pointer lower_session_pool_ptr;
-	utl::ByteArray broadcast_byte_array;
 };
 
 auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void
@@ -214,7 +211,12 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 				else{
 					const auto session_index = 
 						utl::GetInput<unsigned int>("sesion index?:");
-					core_ptr->CloseLowerSession(session_index);	
+					if(which == "upper"){
+						core_ptr->CloseUpperSession(session_index);	
+					}
+					else{
+						core_ptr->CloseLowerSession(session_index);	
+					}
 				}
 			}
 			else if(command == "session"){

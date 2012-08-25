@@ -25,10 +25,10 @@ public:
 	}
 
 	static auto Create(
-		boost::asio::io_service& service, SessionPool::Pointer pool, 
+		boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
 		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func) -> Session::Pointer 
 	{
-		return Pointer(new Session(service, pool, on_receive_func));
+		return Pointer(new Session(service, pool_ptr, on_receive_func));
 	}
 
 	auto GetSocketRef() -> boost::asio::ip::tcp::socket& {
@@ -50,15 +50,16 @@ public:
 	}
 
 	auto Close() -> void {
-		this->sock.get_io_service().dispatch(
+		this->sock.get_io_service().post(
 			boost::bind(&Session::DoClose, shared_from_this()));
-		//this->DoClose();
 	}
 
 private:
-	Session(boost::asio::io_service& service, SessionPool::Pointer pool, 
+	Session(boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
 		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func)
-			:sock(service), pool(pool), on_receive_func(on_receive_func), received_byte_array(100){}
+			:sock(service), pool_ptr(pool_ptr), 
+			on_receive_func(on_receive_func), received_byte_array(100), 
+			handle_send_strand(service){}
 
 	auto DoHandleReceive() -> void {
 		std::cout << "do handle receive" << std::endl;
@@ -104,11 +105,11 @@ private:
 				&send_byte_array_queue.front().front(), 
 				send_byte_array_queue.front().size()
 			),
-			boost::bind(
+			this->handle_send_strand.wrap(boost::bind(
 				&Session::HandleSend,
-				this, 
+				shared_from_this(), 
 				boost::asio::placeholders::error
-			)
+			))
 		);
 	}
 
@@ -116,7 +117,9 @@ private:
 		if(!error_code){
 			if(!this->send_byte_array_queue.empty()){
 				this->send_byte_array_queue.pop_front();
-				this->DoHandleSend();
+				if(!this->send_byte_array_queue.empty()){
+					this->DoHandleSend();
+				}
 			}
 		}
 		else if(error_code == boost::system::errc::connection_reset)
@@ -132,15 +135,16 @@ private:
 		std::cout << GetAddressStr(shared_from_this()) << " closed" << std::endl;
 		//this->sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 		this->sock.close();
-		this->pool->Erase(shared_from_this());
+		this->pool_ptr->Erase(shared_from_this());
 	}
 
 	boost::asio::ip::tcp::socket sock;
-	SessionPool::Pointer pool;
+	SessionPool::Pointer pool_ptr;
 	boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func;
 	//std::array<char, 100> 
 	utl::ByteArray received_byte_array;
 	std::deque<utl::ByteArray> send_byte_array_queue;
+	boost::asio::strand handle_send_strand;
 
 };
 

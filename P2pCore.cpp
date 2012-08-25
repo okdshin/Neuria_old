@@ -16,15 +16,16 @@ int main(int argc, char* argv[])
 	}
 
 	auto core_ptr = P2pCore::Create(service, server_port, 
-		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func from upper
+		[](P2pCore::Pointer core, Session::Pointer session, 
+				const utl::ByteArray& byte_array){ //on receive func from upper
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM UPPER called:" << str << std::endl;
-			//session->Send(byte_array);
 		},
-		[](Session::Pointer session, const utl::ByteArray& byte_array){ //on receive func from lower
+		[](P2pCore::Pointer core, Session::Pointer session, 
+				const utl::ByteArray& byte_array){ //on receive func from lower
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
-			//session->Send(byte_array);
+			core->BroadcastToUpper(byte_array);
 		}
 	);
 
