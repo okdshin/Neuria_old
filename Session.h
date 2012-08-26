@@ -39,7 +39,7 @@ public:
 		DoOnReceive();
 	}
 
-	auto Send(const utl::ByteArray& byte_array) -> void {	
+	auto Send(const utl::ByteArray& byte_array) -> void {
 		this->os << "send" << std::endl;
 		bool is_empty = this->send_byte_array_queue.empty();
 		this->send_byte_array_queue.push_back(byte_array);
@@ -59,14 +59,15 @@ private:
 		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func,
 		std::ostream& os)
 			:sock(service), pool_ptr(pool_ptr), 
-			on_receive_func(on_receive_func), received_byte_array(buffer_size), 
+			on_receive_func(on_receive_func), part_of_array(buffer_size),
+			received_byte_array(), 
 			on_send_strand(service),
 			os(os){}
 
 	auto DoOnReceive() -> void {
 		this->os << "do on receive" << std::endl;
 		this->sock.async_read_some(
-			boost::asio::buffer(received_byte_array),
+			boost::asio::buffer(part_of_array),
 			boost::bind(
 				&Session::OnReceive, 
 				shared_from_this(),
@@ -74,6 +75,7 @@ private:
 				boost::asio::placeholders::bytes_transferred
 			)
 		);
+
 	}
 
 	auto OnReceive(
@@ -81,12 +83,14 @@ private:
 	-> void {
 		this->os << "on receive" << std::endl;
 		if(!error_code){
-			this->os << "received:";
-			this->os.write(&received_byte_array.front(), bytes_transferred);
-			this->os << std::endl;
+			std::copy(part_of_array.begin(), part_of_array.begin()+bytes_transferred, 
+				std::back_inserter(this->received_byte_array));
 			
-			this->sock.get_io_service().dispatch(
-				boost::bind(this->on_receive_func, shared_from_this(), received_byte_array));
+			if(bytes_transferred < this->part_of_array.size()){
+				this->sock.get_io_service().dispatch(boost::bind(
+					this->on_receive_func, shared_from_this(), this->received_byte_array));
+				this->received_byte_array.resize(0);
+			}
 			
 			DoOnReceive();
 		}
@@ -143,6 +147,7 @@ private:
 	SessionPool::Pointer pool_ptr;
 	boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func;
 	//std::array<char, 100> 
+	utl::ByteArray part_of_array;
 	utl::ByteArray received_byte_array;
 	std::deque<utl::ByteArray> send_byte_array_queue;
 	boost::asio::strand on_send_strand;
