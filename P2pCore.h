@@ -149,7 +149,7 @@ private:
 				<< this->upper_session_pool_ptr->GetSize() << std::endl;
 		}
 		else{
-			this->os << "connect failure." << std::endl;	
+			this->os << "connect failure. " << error_code.message()  << std::endl;	
 		}
 	}
 
@@ -166,10 +166,26 @@ private:
 auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void
 {
 	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
+	std::cout << "\"help\" shows commands" << std::endl;
 	while(true){ //main loop
 		try{
 			const auto command = utl::GetInput<std::string>("command?:");
-			if(command == "connect"){
+			if(command == "help")
+			{
+				std::cout
+					<< "!!!HELP!!!\n"
+					<<"you can use below commands.\n"
+					<< "connect:connect to upper peer.\n"
+					<< "broadcast:broadcast message.\n"
+					<< "upper:send message to upper peer.\n"
+					<< "lower:send message to lower peer.\n"
+					<< "close:close session.\n"
+					<< "session:show session list.\n"
+					<< "exit:exit app.\n"
+					<< "quit:alias of exit command"
+					<< std::endl;
+				
+			}else if(command == "connect"){
 				const auto hostname = utl::GetInput<std::string>("hostname?:");
 				const auto port = utl::GetInput<int>("port?:");	
 
