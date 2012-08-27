@@ -1,5 +1,4 @@
 #ifdef P2PCORE_UNIT_TEST
-#define DEBUG_LEVEL 60
 #include "P2pCore.h"
 #include <iostream>
 #include <boost/thread/thread.hpp>

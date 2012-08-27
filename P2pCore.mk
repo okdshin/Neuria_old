@@ -1,5 +1,5 @@
 CXX = ccache g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D P2PCORE_UNIT_TEST -D DEBUG_MODE -D DEBUG_LEVEL=40
+CXXFLAGS = -Wall -g -D P2PCORE_UNIT_TEST
 INCLUDES = -I/usr/include 
 LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
 OBJS = P2pCore.o
