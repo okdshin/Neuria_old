@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	auto node = Node<int>(service, server_port, 128, 
 		[](const utl::ByteArray&)->int{return 10;}, std::cout);
 	
-	node.RegisterForUpperFunc(10,
+	node.RegisterFuncForUpper(10,
 		[](P2pCore::Pointer core, Session::Pointer session, 
 				const utl::ByteArray& byte_array){ //on receive func from upper
 			std::string str(byte_array.begin(), byte_array.end());
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 			std::cout << core->GetSessionListStr() << std::endl;
 		}
 	);
-	node.RegisterForLowerFunc(10,
+	node.RegisterFuncForLower(10,
 		[](P2pCore::Pointer core, Session::Pointer session, 
 				const utl::ByteArray& byte_array){ //on receive func from lower
 			std::string str(byte_array.begin(), byte_array.end());
