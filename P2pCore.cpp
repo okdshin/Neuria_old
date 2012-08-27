@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
 				const utl::ByteArray& byte_array){ //on receive func from lower
 			std::string str(byte_array.begin(), byte_array.end());
 			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
-			core->BroadcastToUpper(byte_array);
+			//core->BroadcastToUpper(byte_array);
 		},
-		std::cout
+		(std::cout)
 	);
 
 	std::cout << "accept port is " << server_port << std::endl;
