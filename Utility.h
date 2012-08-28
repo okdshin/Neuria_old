@@ -8,6 +8,14 @@ namespace utl
 {
 using ByteArray = std::vector<char>;
 
+auto String2ByteArray(const std::string& str) -> ByteArray {
+	return ByteArray(str.begin(), str.end());
+}
+
+auto ByteArray2String(const ByteArray& byte_array) -> std::string {
+	return std::string(byte_array.begin(), byte_array.end());
+}
+
 template<class ValueType>
 auto GetInput(const std::string& prompt) -> ValueType
 {
