@@ -1,6 +1,7 @@
 Neuria
 ================================
 Neuria is C++ P2P Library.  
+BSD Lisence.
 
 Required
 --------------------------------
