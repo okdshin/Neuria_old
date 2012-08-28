@@ -9,21 +9,17 @@ namespace nr
 template<class Key>
 class Node{
 public:
+	using Pointer = boost::shared_ptr<Node<Key>>;
 	using KeyPickupper = boost::function<Key (const utl::ByteArray&)>;
-	
-	Node(boost::asio::io_service& service, int port, int buffer_size, KeyPickupper key_pickupper, std::ostream& os)
-		:service(service), key_pickupper(key_pickupper),
-		core_ptr(P2pCore::Create(service, port, buffer_size, 
-			boost::bind(&Node::CallMatchFuncForUpper, this, _1, _2, _3), 
-			boost::bind(&Node::CallMatchFuncForLower, this, _1, _2, _3),
-			os)){}
+	using FuncDict = std::map<Key, P2pCore::OnReceiveFunc>;
 
-	auto RegisterFuncForUpper(const Key& key, P2pCore::OnReceiveFunc func) -> void {
-		this->for_upper_func_dict[key] = func;
-	}
-	
-	auto RegisterFuncForLower(const Key& key, P2pCore::OnReceiveFunc func) -> void {
-		this->for_lower_func_dict[key] = func;
+	static auto Create(boost::asio::io_service& service, int port, int buffer_size, 
+			KeyPickupper key_pickupper, 
+			const FuncDict& for_upper_func_dict, 
+			const FuncDict& for_lower_func_dict, 
+			std::ostream& os) -> Pointer {
+		return Pointer(new Node(service, port, buffer_size, 
+				key_pickupper, for_upper_func_dict, for_lower_func_dict, os));
 	}
 
 	auto CallMatchFuncForUpper(P2pCore::Pointer core, 
@@ -41,7 +37,18 @@ public:
 	}
 
 private:
-	using FuncDict = std::map<Key, P2pCore::OnReceiveFunc>;
+	Node(boost::asio::io_service& service, int port, int buffer_size, 
+			KeyPickupper key_pickupper, 
+			const FuncDict& for_upper_func_dict, 
+			const FuncDict& for_lower_func_dict, 
+			std::ostream& os)
+		:service(service), key_pickupper(key_pickupper),
+		for_upper_func_dict(for_upper_func_dict),
+		for_lower_func_dict(for_lower_func_dict),
+		core_ptr(P2pCore::Create(service, port, buffer_size, 
+			boost::bind(&Node::CallMatchFuncForUpper, this, _1, _2, _3), 
+			boost::bind(&Node::CallMatchFuncForLower, this, _1, _2, _3),
+			os)){}
 
 	auto CallMatchFunc(FuncDict& func_dict, P2pCore::Pointer core, 
 			Session::Pointer session, const utl::ByteArray& byte_array) -> void {
