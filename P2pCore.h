@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 //#include <jsoncpp/json.h>
-#include <deque>
+//#include <deque>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
@@ -200,14 +200,12 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 			else if(command == "upper")
 			{
 				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				core_ptr->BroadcastToUpper(msg);	
+				core_ptr->BroadcastToLower(utl::String2ByteArray(message));
 			}
 			else if(command == "lower")
 			{
 				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				core_ptr->BroadcastToLower(msg);	
+				core_ptr->BroadcastToLower(utl::String2ByteArray(message));
 			}
 			else if(command == "close"){
 				const auto which = utl::GetInput<std::string>("upper or lower?:");
