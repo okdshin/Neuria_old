@@ -3,13 +3,14 @@
 #include <iostream>
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/bind.hpp>
 #include "Utility.h"
 #include "SessionBase.h"
 
 namespace nr
 {
-class SessionPool {
+class SessionPool : public boost::enable_shared_from_this<SessionPool>{
 public:
 	using Pointer = boost::shared_ptr<SessionPool>;
 	static auto Create() -> Pointer {
@@ -20,7 +21,7 @@ public:
 		this->sessions.push_back(session);	
 	}
 
-	auto Erase(SessionBase::Pointer session) -> void {
+	auto Erase(SessionBase::Pointer session) -> void { // not close session.
 		std::cout << "session erase from pool" << std::endl;
 		sessions.erase(std::find(sessions.begin(), sessions.end(), session));
 	}

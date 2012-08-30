@@ -1,6 +1,7 @@
 #pragma once
 //Session:20120816
 #include <iostream>
+#include <cassert>
 #include <memory>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -9,7 +10,7 @@
 #include <boost/function.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "Utility.h"
-#include "SessionPool.h"
+#include "SessionBase.h"
 
 namespace nr
 {
@@ -18,18 +19,22 @@ class Session : public SessionBase, public boost::enable_shared_from_this<Sessio
 {
 public:
 	using Pointer = boost::shared_ptr<Session>;
+	using OnReceiveFunc = boost::function<void (Pointer, const utl::ByteArray&)>;
+	using OnCloseFunc = boost::function<void (Pointer)>;
 
 	~Session(){
 		this->os << "session deleted." << std::endl;
 	}
 
 	static auto Create(
-		boost::asio::io_service& service, SessionPool::Pointer pool_ptr, int buffer_size,
-		boost::function<void (Pointer, const utl::ByteArray&)> on_receive_func, 
+		boost::asio::io_service& service, int buffer_size,
+		OnReceiveFunc on_receive_func, OnCloseFunc on_close_func,
 		std::ostream& os) -> Session::Pointer {
-		return Pointer(new Session(service, pool_ptr, buffer_size, on_receive_func, os));
+		return Pointer(new Session(
+			service, buffer_size, on_receive_func, on_close_func, os));
 	}
 
+	
 	auto GetSocketRef() -> boost::asio::ip::tcp::socket& {
 		return this->sock;
 	}
@@ -53,15 +58,14 @@ public:
 			boost::bind(&Session::DoClose, shared_from_this()));
 	}
 
+
 private:
-	Session(boost::asio::io_service& service, SessionPool::Pointer pool_ptr, 
-		int buffer_size,
-		boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func,
+	Session(boost::asio::io_service& service, int buffer_size,
+		OnReceiveFunc on_receive_func,
+		OnCloseFunc on_close_func,
 		std::ostream& os)
-			:sock(service), pool_ptr(pool_ptr), 
-			on_receive_func(on_receive_func), part_of_array(buffer_size),
-			received_byte_array(), 
-			on_send_strand(service),
+			:sock(service), on_receive_func(on_receive_func), on_close_func(on_close_func), 
+			part_of_array(buffer_size), received_byte_array(), on_send_strand(service), 
 			os(os){}
 
 	auto DoOnReceive() -> void {
@@ -138,15 +142,13 @@ private:
 
 	auto DoClose() -> void {
 		this->os << GetAddressStr(shared_from_this()) << " closed" << std::endl;
-		//this->sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 		this->sock.close();
-		this->pool_ptr->Erase(shared_from_this());
+		this->on_close_func(shared_from_this());
 	}
 
 	boost::asio::ip::tcp::socket sock;
-	SessionPool::Pointer pool_ptr;
-	boost::function<void (Session::Pointer, const utl::ByteArray&)> on_receive_func;
-	//std::array<char, 100> 
+	OnReceiveFunc on_receive_func;
+	OnCloseFunc on_close_func;
 	utl::ByteArray part_of_array;
 	utl::ByteArray received_byte_array;
 	std::deque<utl::ByteArray> send_byte_array_queue;

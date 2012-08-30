@@ -16,24 +16,44 @@ int main(int argc, char* argv[])
 	}
 
 	const int buffer_size = 128;
+	auto session_pool = SessionPool::Create();
 	auto core_ptr = P2pCore::Create(service, server_port, buffer_size, 
-		[](P2pCore::Pointer core, Session::Pointer session, 
-				const utl::ByteArray& byte_array){ //on receive func from upper
-			std::string str(byte_array.begin(), byte_array.end());
-			std::cout << "onreceive FROM UPPER called:" << str << std::endl;
+		[&session_pool](Session::Pointer session){
+			std::cout << "on_accept_func called:" << std::endl;
+			session_pool->Add(session);
 		},
-		[](P2pCore::Pointer core, Session::Pointer session, 
-				const utl::ByteArray& byte_array){ //on receive func from lower
+		[](Session::Pointer session, const utl::ByteArray& byte_array){ 
 			std::string str(byte_array.begin(), byte_array.end());
-			std::cout << "onreceive FROM LOWER called:" << str << std::endl;
-			//core->BroadcastToUpper(byte_array);
+			std::cout << "on receive from accepted session:" << str << std::endl;
+		},
+		[&session_pool](Session::Pointer session){
+			session_pool->Erase(session);
 		},
 		(std::cout)
 	);
 
 	std::cout << "accept port is " << server_port << std::endl;
-	
-	P2pCoreTestCuiApp(service, core_ptr);
+	P2pCoreTestCuiApp(service, core_ptr, 
+		[&session_pool](Session::Pointer session){  // on_connect
+			std::cout << "on_connect!!!" << std::endl; 
+			session_pool->Add(session);
+		}, 
+		[](Session::Pointer session, const utl::ByteArray& byte_array){ // on_receive
+			std::cout << "on_receive!!!" << std::endl; 
+		},
+		[&session_pool](Session::Pointer session){ // on_close
+			session_pool->Erase(session);
+		},
+		[&service, &session_pool](const utl::ByteArray& byte_array){ //broadcast
+			Broadcast(service, session_pool, byte_array);
+		},
+		[&session_pool](){ // close 
+			std::cout << "close" << std::endl; 
+			for(auto& session : *session_pool){
+				session->Close();	
+			}
+		}
+	);
 
     return 0;
 }

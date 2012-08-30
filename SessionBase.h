@@ -17,6 +17,7 @@ public:
 	virtual auto GetSocketRef() -> boost::asio::ip::tcp::socket& = 0;
 	virtual auto Send(const utl::ByteArray& byte_array) -> void = 0;
 	virtual auto Close() -> void = 0;
+
 };
 
 auto GetAddressStr(SessionBase::Pointer session) -> std::string {
