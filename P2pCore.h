@@ -113,6 +113,7 @@ private:
 	std::ostream& os;
 };
 
+
 auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
 	P2pCore::OnConnectFunc on_connect_func, 
 	Session::OnReceiveFunc on_receive_func,
@@ -166,5 +167,30 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 	t.join();	
 }
 
+auto P2pCoreTestCuiApp(
+		boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void { 
+	auto session_pool = SessionPool::Create();
+	P2pCoreTestCuiApp(service, core_ptr, 
+		[&session_pool](Session::Pointer session){  // on_connect
+			std::cout << "on_connect!!!" << std::endl; 
+			session_pool->Add(session);
+		}, 
+		[](Session::Pointer session, const utl::ByteArray& byte_array){ // on_receive
+			std::cout << "on_receive!!!" << std::endl; 
+		},
+		[&session_pool](Session::Pointer session){ // on_close
+			session_pool->Erase(session);
+		},
+		[&service, &session_pool](const utl::ByteArray& byte_array){ //broadcast
+			Broadcast(service, session_pool, byte_array);
+		},
+		[&session_pool](){ // close 
+			std::cout << "close" << std::endl; 
+			for(auto& session : *session_pool){
+				session->Close();	
+			}
+		}
+	);
+}
 }
 
