@@ -6,6 +6,7 @@
 #include <tuple>
 #include <algorithm>
 #include "Utility.h"
+#include "Hash.h"
 
 namespace nr
 {
@@ -45,20 +46,31 @@ auto CalcSimilarity(
 			)->size();
 }
 
+auto CalcKeyHashData(const utl::ByteArray& src_data) -> KeyHashData {
+	return GetHashStr(src_data);	
+}
+
 class KeyHashDataBase{
 public:
-
     KeyHashDataBase(double threshold, std::ostream& os)
 		:hash_list(), threshold(threshold), os(os){}
 
-	auto Add(const Keyward& keyward, const KeyHashData& data) -> void {
-		this->hash_list.push_back(std::make_tuple(keyward, data));
+	auto Add(const Keyward& keyward, const utl::ByteArray& src_data) -> void {
+		this->hash_list.push_back(std::make_tuple(keyward, CalcKeyHashData(src_data)));
 	}
 
-	auto Erase(const KeyHashData& data) -> void {
+	auto EraseSameAsKeyHashData(const KeyHashData& data) -> void {
 		this->hash_list.erase(
 			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
 				[&data](const KeyHash& hash){return GetData(hash) == data;}), 
+			this->hash_list.end());	
+	}
+
+	auto EraseSameAsSrcData(const utl::ByteArray& src_data) -> void {
+		this->hash_list.erase(
+			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
+				[&src_data](const KeyHash& hash)
+					{return GetData(hash) == CalcKeyHashData(src_data);}), 
 			this->hash_list.end());	
 	}
 
@@ -66,7 +78,7 @@ public:
 		this->hash_list.clear();	
 	}
 
-	auto SearchKeyHash(const KeywardList& search_keyward_list) -> KeyHashList {
+	auto Search(const KeywardList& search_keyward_list) -> KeyHashList {
 		for(const auto& key_hash : this->hash_list){
 			this->os <<  GetKeyward(key_hash) << "|";
 			for(const auto& keyward : search_keyward_list){

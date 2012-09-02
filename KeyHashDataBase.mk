@@ -1,7 +1,7 @@
 CXX = g++ -std=gnu++0x
 CXXFLAGS = -Wall -g -D KEYHASHDATABASE_UNIT_TEST
 INCLUDES = 
-LIBS =
+LIBS = -lcrypto
 OBJS = KeyHashDataBase.o
 PROGRAM = KeyHashDataBase.out
 
