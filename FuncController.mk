@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D ACCEPTEDMANAGER_UNIT_TEST
+CXXFLAGS = -Wall -g -D FUNCCONTROLLER_UNIT_TEST
 INCLUDES = 
 LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
-OBJS = AcceptedManager.o
-PROGRAM = AcceptedManager.out
+OBJS = FuncController.o
+PROGRAM = FuncController.out
 
 all:$(PROGRAM)
 
