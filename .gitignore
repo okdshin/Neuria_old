@@ -1,4 +1,6 @@
+.*
 *.out
 *.o
 .*.swp
+*.log
 core
