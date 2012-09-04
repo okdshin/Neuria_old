@@ -113,6 +113,18 @@ private:
 	std::ostream& os;
 };
 
+auto Send(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
+			const std::string& address, int port, 
+			const utl::ByteArray& byte_array) -> void {
+	core_ptr->Connect(address, port, 
+		[&service, byte_array](Session::Pointer session){
+			//service.post(boost::bind(&Session::Send, session, byte_array));
+			session->Send(byte_array);
+			session->Close();
+		},
+		[](Session::Pointer, const utl::ByteArray&){},
+		[](Session::Pointer){});
+}
 
 auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
 	P2pCore::OnConnectFunc on_connect_func, 
@@ -166,6 +178,7 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 	}
 	t.join();	
 }
+
 
 auto P2pCoreTestCuiApp(
 		boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void { 

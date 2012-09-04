@@ -45,6 +45,7 @@ public:
 	}
 
 	auto Send(const utl::ByteArray& byte_array) -> void {
+		assert(this->sock.is_open());
 		this->os << "send" << std::endl;
 		bool is_empty = this->send_byte_array_queue.empty();
 		this->send_byte_array_queue.push_back(byte_array);
@@ -156,6 +157,14 @@ private:
 	std::ostream& os;
 
 };
+
+auto CreateTestSession(boost::asio::io_service& service) -> Session::Pointer {
+	return Session::Create(service, 128, 
+		[](Session::Pointer, const utl::ByteArray&)
+			{ std::cout << "on receive !!!" << std::endl; }, 
+		[](Session::Pointer){ std::cout << "on close !!!" << std::endl; }, 
+		std::cout);
+}
 
 }
 

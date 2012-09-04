@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
 			session_pool->Add(session);
 		},
 		[](Session::Pointer session, const utl::ByteArray& byte_array){ 
-			std::string str(byte_array.begin(), byte_array.end());
-			std::cout << "on receive from accepted session:" << str << std::endl;
+			std::cout << "on receive from accepted session:" 
+				<< utl::ByteArray2String(byte_array) << std::endl;
 		},
 		[&session_pool](Session::Pointer session){
 			session_pool->Erase(session);
@@ -44,8 +44,9 @@ int main(int argc, char* argv[])
 		[&session_pool](Session::Pointer session){ // on_close
 			session_pool->Erase(session);
 		},
-		[&service, &session_pool](const utl::ByteArray& byte_array){ //broadcast
-			Broadcast(service, session_pool, byte_array);
+		[&service, &core_ptr, &session_pool](const utl::ByteArray& byte_array){ //broadcast
+			//Broadcast(service, session_pool, byte_array);
+			Send(service, core_ptr, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
 		},
 		[&session_pool](){ // close 
 			std::cout << "close" << std::endl; 

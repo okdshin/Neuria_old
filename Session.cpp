@@ -9,10 +9,7 @@ int main(int argc, char* argv[])
 {
 	boost::asio::io_service service;
 	auto pool = SessionPool::Create();
-	auto session = Session::Create(service, 128, 
-		[](Session::Pointer, const utl::ByteArray&){}, 
-		[](Session::Pointer){}, 
-		std::cout);
+	auto session = CreateTestSession(service); 
 	service.run();
 	session->StartReceive();	
 	
