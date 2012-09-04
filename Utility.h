@@ -9,6 +9,13 @@
 namespace utl
 {
 using ByteArray = std::vector<char>;
+auto RANDOM = boost::random::mt19937(static_cast<unsigned long>(std::time(0)));
+using RandomRange = boost::random::uniform_int_distribution<>;
+//RandomRange(1,6) is equalt to dice.
+
+auto Random(int min, int max) -> int {
+	return RandomRange(min, max)(RANDOM);
+}
 
 auto String2ByteArray(const std::string& str) -> ByteArray {
 	return ByteArray(str.begin(), str.end());

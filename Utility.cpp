@@ -28,9 +28,18 @@ void TestCalcSimilarity()
 	std::cout << CalcSimilarity("xyz", "abcd") << std::endl;	
 }
 
+void TestRandom()
+{
+	for(unsigned int i = 0; i < 100; i++)
+	{
+		std::cout << Random(10, 100) << std::endl;	
+	}
+}
+
 int main(int argc, char* argv[])
 {
-	TestCalcSimilarity();
+	//TestCalcSimilarity();
+	TestRandom();
     return 0;
 }
 
