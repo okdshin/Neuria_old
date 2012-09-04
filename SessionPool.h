@@ -39,12 +39,12 @@ public:
 	}
 
 	//range-based-forで使われることを想定している。
-	using Iterator = std::vector<SessionBase::Pointer>::iterator;
-	auto begin() -> Iterator {
+	using iterator = std::vector<SessionBase::Pointer>::iterator;
+	auto begin() -> iterator {
 		return this->sessions.begin();
 	}
 	
-	auto end() -> Iterator {
+	auto end() -> iterator {
 		return this->sessions.end();
 	}
 
@@ -66,7 +66,21 @@ auto Broadcast(boost::asio::io_service& service, SessionPool::Pointer session_po
 	}
 }
 
-
-
+/*
+auto RandomSend(boost::asio::io_service& service, SessionPool::Pointer session_pool, 
+		const utl::ByteArray& byte_array) -> void {
+	if(!session_pool_ptr->IsEmpty()){
+		
+		for(auto& session : *session_pool_ptr){
+			service.post(
+				boost::bind(&SessionBase::Send, session, byte_array));
+		}
+	}
+	else{
+		std::cout << "no peer. random send failed." << std::endl;	
+	}
+				
+}
+*/
 }
 
