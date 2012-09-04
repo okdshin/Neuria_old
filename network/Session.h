@@ -9,17 +9,16 @@
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include "Utility.h"
 #include "SessionBase.h"
 
-namespace nr
-{
+namespace nr{
+namespace ntw{
 
 class Session : public SessionBase, public boost::enable_shared_from_this<Session>
 {
 public:
 	using Pointer = boost::shared_ptr<Session>;
-	using OnReceiveFunc = boost::function<void (Pointer, const utl::ByteArray&)>;
+	using OnReceiveFunc = boost::function<void (const ByteArray&)>;
 	using OnCloseFunc = boost::function<void (Pointer)>;
 
 	~Session(){
@@ -44,7 +43,7 @@ public:
 		DoOnReceive();
 	}
 
-	auto Send(const utl::ByteArray& byte_array) -> void {
+	auto Send(const ByteArray& byte_array) -> void {
 		assert(this->sock.is_open());
 		this->os << "send" << std::endl;
 		bool is_empty = this->send_byte_array_queue.empty();
@@ -93,7 +92,7 @@ private:
 			
 			if(bytes_transferred < this->part_of_array.size()){
 				this->sock.get_io_service().dispatch(boost::bind(
-					this->on_receive_func, shared_from_this(), this->received_byte_array));
+					this->on_receive_func, this->received_byte_array));
 				this->received_byte_array.resize(0);
 			}
 			
@@ -150,9 +149,9 @@ private:
 	boost::asio::ip::tcp::socket sock;
 	OnReceiveFunc on_receive_func;
 	OnCloseFunc on_close_func;
-	utl::ByteArray part_of_array;
-	utl::ByteArray received_byte_array;
-	std::deque<utl::ByteArray> send_byte_array_queue;
+	ByteArray part_of_array;
+	ByteArray received_byte_array;
+	std::deque<ByteArray> send_byte_array_queue;
 	boost::asio::strand on_send_strand;
 	std::ostream& os;
 
@@ -160,11 +159,12 @@ private:
 
 auto CreateTestSession(boost::asio::io_service& service) -> Session::Pointer {
 	return Session::Create(service, 128, 
-		[](Session::Pointer, const utl::ByteArray&)
+		[](const ByteArray&)
 			{ std::cout << "on receive !!!" << std::endl; }, 
 		[](Session::Pointer){ std::cout << "on close !!!" << std::endl; }, 
 		std::cout);
 }
 
+}
 }
 

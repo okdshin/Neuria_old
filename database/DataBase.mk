@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D LABELEDSINK_UNIT_TEST
+CXXFLAGS = -Wall -g -D DATABASE_UNIT_TEST
 INCLUDES = 
-LIBS = -lbz2
-OBJS = LabeledSink.o
-PROGRAM = LabeledSink.out
+LIBS = -lcrypto
+OBJS = DataBase.o
+PROGRAM = DataBase.out
 
 all:$(PROGRAM)
 

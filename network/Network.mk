@@ -1,9 +1,9 @@
-CXX = ccache g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D UTILITY_UNIT_TEST
+CXX = g++ -std=gnu++0x
+CXXFLAGS = -Wall -g -D NETWORK_UNIT_TEST
 INCLUDES = 
 LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
-OBJS = Utility.o
-PROGRAM = Utility.out
+OBJS = Network.o
+PROGRAM = Network.out
 
 all:$(PROGRAM)
 

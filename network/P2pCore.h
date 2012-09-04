@@ -2,16 +2,15 @@
 //P2pCore:20120816
 #include <iostream>
 #include <vector>
-//#include <jsoncpp/json.h>
-//#include <deque>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include "Session.h"
 #include "SessionPool.h"
+#include "../ByteArray.h"
 
-namespace nr
-{
+namespace nr{
+namespace ntw{
 
 class P2pCore : public boost::enable_shared_from_this<P2pCore> {
 public:
@@ -114,94 +113,17 @@ private:
 };
 
 auto Send(P2pCore::Pointer core_ptr, const std::string& address, int port, 
-		const utl::ByteArray& byte_array) -> void {
+		const ByteArray& byte_array) -> void {
 	core_ptr->Connect(address, port, 
 		[byte_array](Session::Pointer session){
 			session->Send(byte_array);
 			session->Close();
 		},
-		[](Session::Pointer, const utl::ByteArray&){},
+		[](const ByteArray&){},
 		[](Session::Pointer){});
 }
 
-auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
-	P2pCore::OnConnectFunc on_connect_func, 
-	Session::OnReceiveFunc on_receive_func,
-	Session::OnCloseFunc on_close_func,
-	boost::function<void (const utl::ByteArray&)> broadcast_func,
-	boost::function<void ()> close_func) -> void
-{
-	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
-	std::cout << "\"help\" shows commands" << std::endl;
-	while(true){ //main loop
-		try{
-			const auto command = utl::GetInput<std::string>("command?:");
 
-			if(command == "help")
-			{
-				std::cout
-					<< "!!!HELP!!!\n"
-					<<"you can use below commands.\n"
-					<< "connect:connect to upper peer.\n"
-					<< "broadcast:broadcast message.\n"
-					<< "close:close session.\n"
-					<< "exit:exit app.\n"
-					<< std::endl;
-				
-			}else if(command == "connect"){
-				const auto hostname = utl::GetInput<std::string>("hostname?:");
-				const auto port = utl::GetInput<int>("port?:");	
-
-				core_ptr->Connect(hostname, port, 
-					on_connect_func, on_receive_func, on_close_func);
-			}
-			else if(command == "broadcast"){
-				const auto message = utl::GetInput<std::string>("message?:");
-				std::vector<char> msg(message.c_str(), message.c_str()+message.length());
-				broadcast_func(msg);
-			}
-			else if(command == "close"){
-				close_func();	
-			}
-			else if(command == "exit"){
-				exit(0);
-			}
-			else{
-				std::cout << "invalid command.(command \"help\" and see)" << std::endl;	
-			}
-		}
-		catch(std::exception& e){
-			std::cout << "error!!!:" << e.what() << std::endl;	
-		}
-	}
-	t.join();	
-}
-
-
-auto P2pCoreTestCuiApp(
-		boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void { 
-	auto session_pool = SessionPool::Create();
-	P2pCoreTestCuiApp(service, core_ptr, 
-		[&session_pool](Session::Pointer session){  // on_connect
-			std::cout << "on_connect!!!" << std::endl; 
-			session_pool->Add(session);
-		}, 
-		[](Session::Pointer session, const utl::ByteArray& byte_array){ // on_receive
-			std::cout << "on_receive!!!" << std::endl; 
-		},
-		[&session_pool](Session::Pointer session){ // on_close
-			session_pool->Erase(session);
-		},
-		[&session_pool](const utl::ByteArray& byte_array){ //broadcast
-			Broadcast(session_pool, byte_array);
-		},
-		[&session_pool](){ // close 
-			std::cout << "close" << std::endl; 
-			for(auto& session : *session_pool){
-				session->Close();	
-			}
-		}
-	);
 }
 }
 

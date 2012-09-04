@@ -5,11 +5,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/bind.hpp>
-#include "Utility.h"
 #include "SessionBase.h"
 
-namespace nr
-{
+namespace nr{
+namespace ntw{
+
 class SessionPool : public boost::enable_shared_from_this<SessionPool>{
 public:
 	using Pointer = boost::shared_ptr<SessionPool>;
@@ -54,7 +54,7 @@ private:
 };
 
 auto Broadcast(
-		SessionPool::Pointer session_pool, const utl::ByteArray& byte_array) -> void {	
+		SessionPool::Pointer session_pool, const ByteArray& byte_array) -> void {	
 	if(!session_pool->IsEmpty()){
 		for(auto& session : *session_pool){
 			session->Send(byte_array);
@@ -66,4 +66,4 @@ auto Broadcast(
 }
 
 }
-
+}
