@@ -5,10 +5,13 @@
 #include <boost/lexical_cast.hpp>
 #include <ctime>
 #include <boost/random.hpp>
+#include "../ByteArray.h"
+#include "MatchFuncCaller.h"
+#include "LabeledSink.h"
 
-namespace utl
-{
-using ByteArray = std::vector<char>;
+namespace nr{
+namespace utl{
+
 auto RANDOM = boost::random::mt19937(static_cast<unsigned long>(std::time(0)));
 using RandomRange = boost::random::uniform_int_distribution<>;
 //RandomRange(1,6) is equalt to dice.
@@ -44,34 +47,9 @@ private:
 	boost::mt19937 gen;
 };
 
-auto CalcSimilarity(const std::string& left, const std::string& right) -> double {
-	double shorter_length = left.length() < right.length() ? left.length() : right.length();
-	double longer_length = left.length() > right.length() ? left.length() : right.length();
-	auto str = left.length() < right.length() ? left : right;
-	auto similarity_unit = shorter_length*shorter_length/longer_length;
-	return (std::string::npos != left.find(right)) 
-		|| (std::string::npos != right.find(left)) 
-			? shorter_length*shorter_length/longer_length : -similarity_unit;
-	
-}
-
-auto CalcSimilarity(
-		const std::vector<std::string>& search_keyward_list, const std::string& target_keyward) -> double {
-	double similarity = 0.0;
-	for(const auto& search_keyward : search_keyward_list){
-		similarity += utl::CalcSimilarity(search_keyward, target_keyward);
-	}
-	return similarity
-		/ std::max_element(search_keyward_list.begin(), search_keyward_list.end(), 
-			[](const std::string& left, const std::string& right)
-				{ return left.size() < right.size(); }
-			)->size();
-}
-
 template<class ValueType>
 auto GetInput(const std::string& prompt) -> ValueType
 {
-	//DEBUG_STREAM(50) << "hello" << 55 << std::endl;
 	std::cout << prompt << std::flush;
 	std::string input;
 	std::getline(std::cin, input);
@@ -97,4 +75,4 @@ auto StrJoin(const std::vector<std::string>& str_vect, std::string delim) -> std
 }
 
 }
-
+}

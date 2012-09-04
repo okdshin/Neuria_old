@@ -1,5 +1,5 @@
-#ifdef SESSIONBASE_UNIT_TEST
-#include "SessionBase.h"
+#ifdef NEURIA_UNIT_TEST
+#include "Neuria.h"
 #include <iostream>
 
 using namespace nr;

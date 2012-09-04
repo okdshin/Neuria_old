@@ -2,7 +2,8 @@
 #include "LabeledSink.h"
 #include <iostream>
 
-using namespace utl;
+using namespace nr;
+using namespace nr::utl;
 
 int main(int argc, char* argv[])
 {

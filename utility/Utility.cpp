@@ -2,7 +2,8 @@
 #include "Utility.h"
 #include <iostream>
 
-using namespace utl;
+using namespace nr;
+using namespace nr::utl;
 /*
 void TestRandomElementSelector()
 {

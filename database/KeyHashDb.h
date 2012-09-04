@@ -5,14 +5,13 @@
 #include <vector>
 #include <tuple>
 #include <algorithm>
-#include "Utility.h"
 #include "KeyHash.h"
 #include "Hash.h"
 
-namespace nr
-{
+namespace nr{
+namespace db{
 
-auto CalcId(const utl::ByteArray& src_data) -> KeyHash::Id {
+auto CalcId(const ByteArray& src_data) -> KeyHash::Id {
 	return KeyHash::Id(GetHashStr(src_data));	
 }
 
@@ -30,6 +29,30 @@ auto StrList2KeywardList(
 	return keyward_list;
 }
 
+auto CalcSimilarity(const std::string& left, const std::string& right) -> double {
+	double shorter_length = left.length() < right.length() ? left.length() : right.length();
+	double longer_length = left.length() > right.length() ? left.length() : right.length();
+	auto str = left.length() < right.length() ? left : right;
+	auto similarity_unit = shorter_length*shorter_length/longer_length;
+	return (std::string::npos != left.find(right)) 
+		|| (std::string::npos != right.find(left)) 
+			? shorter_length*shorter_length/longer_length : -similarity_unit;
+	
+}
+
+auto CalcSimilarity(
+		const std::vector<std::string>& search_keyward_list, const std::string& target_keyward) -> double {
+	double similarity = 0.0;
+	for(const auto& search_keyward : search_keyward_list){
+		similarity += CalcSimilarity(search_keyward, target_keyward);
+	}
+	return similarity
+		/ std::max_element(search_keyward_list.begin(), search_keyward_list.end(), 
+			[](const std::string& left, const std::string& right)
+				{ return left.size() < right.size(); }
+			)->size();
+}
+
 auto CalcSimilarity(
 		const KeywardList& keyward_list, const KeyHash::Keyward& keyward) -> double{
 	auto keyward_str_vec = std::vector<std::string>();
@@ -39,7 +62,7 @@ auto CalcSimilarity(
 		[](const KeyHash::Keyward& keyward){
 			return keyward.Get();
 		});
-	return utl::CalcSimilarity(keyward_str_vec, keyward.Get());
+	return CalcSimilarity(keyward_str_vec, keyward.Get());
 }
 
 class KeyHashDb{
@@ -49,7 +72,7 @@ public:
 	KeyHashDb(double threshold, std::ostream& os)
 		:hash_list(), threshold(threshold), os(os){}
 
-	auto Add(const KeyHash::Keyward& keyward, const utl::ByteArray& src_data) -> void {
+	auto Add(const KeyHash::Keyward& keyward, const ByteArray& src_data) -> void {
 		this->hash_list.push_back(KeyHash(
 			KeyHash::Keyward(keyward), KeyHash::Id(CalcId(src_data))));
 	}
@@ -61,7 +84,7 @@ public:
 			this->hash_list.end());	
 	}
 
-	auto EraseSameAsSrcData(const utl::ByteArray& src_data) -> void {
+	auto EraseSameAsSrcData(const ByteArray& src_data) -> void {
 		this->hash_list.erase(
 			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
 				[&src_data](const KeyHash& key_hash)
@@ -105,5 +128,6 @@ std::ostream& operator<<(std::ostream& os, const KeyHashDb::KeyHashList& key_has
 
 	return os;
 }
-}
 
+}
+}

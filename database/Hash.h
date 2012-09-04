@@ -5,12 +5,12 @@
 #include <array>
 #include <sstream>
 #include <openssl/sha.h>
-#include "Utility.h"
+#include "../Neuria.h"
 
-namespace nr
-{
+namespace nr{
+namespace db{
 
-auto GetHashStr(const utl::ByteArray& data) -> std::string
+auto GetHashStr(const ByteArray& data) -> std::string
 {
 	SHA256_CTX sha256;
 	SHA256_Init(&sha256);
@@ -27,6 +27,6 @@ auto GetHashStr(const utl::ByteArray& data) -> std::string
 	return ss.str();
 }
 
-
+}
 }
 

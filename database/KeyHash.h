@@ -4,8 +4,9 @@
 #include <string>
 
 
-namespace nr
-{
+namespace nr{
+namespace db{
+
 class KeyHash{
 public:
 	class Id{
@@ -61,4 +62,4 @@ auto operator==(const KeyHash::Id& left, const KeyHash::Id& right) -> bool {
 }
 
 }
-
+}

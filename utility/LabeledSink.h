@@ -5,8 +5,9 @@
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 
-namespace utl
-{
+namespace nr{
+namespace utl{
+
 class LabeledSink : public boost::iostreams::sink {
 public:
 	using Stream = boost::iostreams::stream<LabeledSink>;
@@ -27,4 +28,4 @@ private:
 };
 
 }
-
+}

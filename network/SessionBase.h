@@ -3,10 +3,10 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
-#include "Utility.h"
+#include "../ByteArray.h"
 
-namespace nr
-{
+namespace nr{
+namespace ntw{
 
 class SessionBase
 {
@@ -15,7 +15,7 @@ public:
 	virtual ~SessionBase(){}
 
 	virtual auto GetSocketRef() -> boost::asio::ip::tcp::socket& = 0;
-	virtual auto Send(const utl::ByteArray& byte_array) -> void = 0;
+	virtual auto Send(const ByteArray& byte_array) -> void = 0;
 	virtual auto Close() -> void = 0;
 
 };
@@ -25,4 +25,4 @@ auto GetAddressStr(SessionBase::Pointer session) -> std::string {
 }
 
 }
-
+}

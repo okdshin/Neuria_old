@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D FUNCCONTROLLER_UNIT_TEST
+CXXFLAGS = -Wall -g -D BYTEARRAY_UNIT_TEST
 INCLUDES = 
-LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
-OBJS = FuncController.o
-PROGRAM = FuncController.out
+LIBS =
+OBJS = ByteArray.o
+PROGRAM = ByteArray.out
 
 all:$(PROGRAM)
 
