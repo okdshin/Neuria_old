@@ -89,24 +89,5 @@ auto StrJoin(const std::vector<std::string>& str_vect, std::string delim) -> std
 	return integrated;
 }
 
-
-class DebugOutStream
-{
-public:
-	DebugOutStream();
-	void SetIsEnable(bool is_enable)
-	{
-		this->is_enable = is_enable;	
-	}
-
-	bool IsEnable()const
-	{
-		return this->is_enable;	
-	}
-
-private:
-	std::ostream& DebugOut;
-	bool is_enable;
-};
 }
 
