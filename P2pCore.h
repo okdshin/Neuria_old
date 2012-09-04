@@ -113,12 +113,10 @@ private:
 	std::ostream& os;
 };
 
-auto Send(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
-			const std::string& address, int port, 
-			const utl::ByteArray& byte_array) -> void {
+auto Send(P2pCore::Pointer core_ptr, const std::string& address, int port, 
+		const utl::ByteArray& byte_array) -> void {
 	core_ptr->Connect(address, port, 
-		[&service, byte_array](Session::Pointer session){
-			//service.post(boost::bind(&Session::Send, session, byte_array));
+		[byte_array](Session::Pointer session){
 			session->Send(byte_array);
 			session->Close();
 		},
