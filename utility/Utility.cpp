@@ -18,7 +18,7 @@ void TestGetInput()
 	std::cout << GetInput<int>("input number:") << std::endl;
 	std::cout << GetInput<std::string>("input string:") << std::endl;
 }
-
+/*
 void TestCalcSimilarity()
 {
 	std::cout << CalcSimilarity("abcdefg", "abcdefg") << std::endl;	
@@ -28,7 +28,7 @@ void TestCalcSimilarity()
 	std::cout << CalcSimilarity("abc", "abcd") << std::endl;	
 	std::cout << CalcSimilarity("xyz", "abcd") << std::endl;	
 }
-
+*/
 void TestRandom()
 {
 	for(unsigned int i = 0; i < 100; i++)

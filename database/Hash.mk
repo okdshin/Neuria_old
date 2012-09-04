@@ -1,7 +1,7 @@
 CXX = ccache g++ -std=gnu++0x
 CXXFLAGS = -Wall -g -D HASH_UNIT_TEST
 INCLUDES = 
-LIBS = -lcrypto
+LIBS = -lcrypto -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
 OBJS = Hash.o
 PROGRAM = Hash.out
 

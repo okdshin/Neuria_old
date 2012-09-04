@@ -5,7 +5,7 @@
 #include <array>
 #include <sstream>
 #include <openssl/sha.h>
-#include "../Neuria.h"
+#include "../ByteArray.h"
 
 namespace nr{
 namespace db{
