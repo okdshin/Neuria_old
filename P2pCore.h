@@ -192,8 +192,8 @@ auto P2pCoreTestCuiApp(
 		[&session_pool](Session::Pointer session){ // on_close
 			session_pool->Erase(session);
 		},
-		[&service, &session_pool](const utl::ByteArray& byte_array){ //broadcast
-			Broadcast(service, session_pool, byte_array);
+		[&session_pool](const utl::ByteArray& byte_array){ //broadcast
+			Broadcast(session_pool, byte_array);
 		},
 		[&session_pool](){ // close 
 			std::cout << "close" << std::endl; 

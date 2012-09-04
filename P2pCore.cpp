@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
 			session_pool->Erase(session);
 		},
 		[&service, &core_ptr, &session_pool](const utl::ByteArray& byte_array){ //broadcast
-			//Broadcast(service, session_pool, byte_array);
-			Send(core_ptr, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
+			Broadcast(session_pool, byte_array);
+			//Send(core_ptr, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
 		},
 		[&session_pool](){ // close 
 			std::cout << "close" << std::endl; 
