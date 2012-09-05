@@ -36,7 +36,7 @@ public:
 			Session::OnCloseFunc on_close_func) -> void {
 		this->os << "connectiong..." << std::endl;
 
-		boost::asio::ip::tcp::resolver resolver(this->service); //名前解決
+		boost::asio::ip::tcp::resolver resolver(this->service); //name resolving
 		auto query = boost::asio::ip::tcp::resolver::query(
 			hostname, boost::lexical_cast<std::string>(port));
 		auto endpoint_iter = resolver.resolve(query);
@@ -45,13 +45,9 @@ public:
 			this->service, this->buffer_size, on_receive_func, on_close_func, this->os);
 
 		boost::asio::async_connect(
-			new_session->GetSocketRef(),
-			endpoint_iter,
-			boost::bind(
-				&P2pCore::OnConnect, shared_from_this(), on_connect_func, new_session,
-				boost::asio::placeholders::error
-			)
-		);	
+			new_session->GetSocketRef(), endpoint_iter, boost::bind(
+				&P2pCore::OnConnect, this->shared_from_this(), 
+				on_connect_func, new_session, boost::asio::placeholders::error));	
 	}
 
 private:

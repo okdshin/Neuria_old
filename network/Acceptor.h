@@ -28,6 +28,7 @@ public:
 		created->Start();
 		return created;
 	}
+
 private:
     Acceptor(boost::asio::io_service& service, int port, int buffer_size,
 			OnAcceptFunc on_accept_func, 

@@ -13,6 +13,7 @@ auto ConnectorTestCuiApp(boost::asio::io_service& service, Connector::Pointer co
 		boost::function<void (const ByteArray&)> broadcast_func,
 		boost::function<void ()> close_func) -> void {
 
+	boost::asio::io_service::work w(service);
 	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
 	std::cout << "\"help\" shows commands" << std::endl;
 	while(true){ //main loop
@@ -33,7 +34,7 @@ auto ConnectorTestCuiApp(boost::asio::io_service& service, Connector::Pointer co
 			}else if(command == "connect"){
 				const auto hostname = utl::GetInput<std::string>("hostname?:");
 				const auto port = utl::GetInput<int>("port?:");	
-
+				std::cout << hostname << ":" << port << std::endl;
 				connector->Connect(hostname, port, 
 					on_connect_func, on_receive_func, on_close_func);
 			}

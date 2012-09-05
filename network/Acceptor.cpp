@@ -9,6 +9,7 @@ using namespace nr::ntw;
 int main(int argc, char* argv[])
 {
 	boost::asio::io_service service;
+	boost::asio::io_service::work w(service);
 	int server_port = 54321;
 	if(argc == 2)
 	{
@@ -29,14 +30,12 @@ int main(int argc, char* argv[])
 		[&session_pool](Session::Pointer session){
 			session_pool->Erase(session);
 		},
-		(std::cout)
+		std::cout
 	);
 
 	std::cout << "accept port is " << server_port << std::endl;
 	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
 	
-	while(true){}
-
 	t.join();
 
     return 0;

@@ -36,6 +36,10 @@ public:
 		auto new_session = Session::Create(
 			this->service, this->buffer_size, on_receive_func, on_close_func, this->os);
 
+	
+		this->os << "query resolved:"<< endpoint_iter->endpoint().address().to_string() 
+			<< ":" <<  endpoint_iter->endpoint().port() << std::endl;
+		
 		boost::asio::async_connect(
 			new_session->GetSocketRef(), endpoint_iter, boost::bind(
 				&Connector::OnConnect, this->shared_from_this(), 
