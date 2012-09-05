@@ -1,5 +1,5 @@
 #pragma once
-//Connector:20120905
+//Client:20120905
 #include <iostream>
 #include <vector>
 #include <boost/asio.hpp>
@@ -12,14 +12,14 @@
 namespace nr{
 namespace ntw{
 
-class Connector : public boost::enable_shared_from_this<Connector> {
+class Client : public boost::enable_shared_from_this<Client> {
 public:
-	using Pointer = boost::shared_ptr<Connector>;
+	using Pointer = boost::shared_ptr<Client>;
 	using OnConnectFunc = boost::function<void (Session::Pointer)>;
 	
 	static auto Create(boost::asio::io_service& service, 
 			int buffer_size, std::ostream& os) -> Pointer {
-		return Pointer(new Connector(service, buffer_size, os));	
+		return Pointer(new Client(service, buffer_size, os));	
 	}
 
 	auto Connect(const std::string& hostname, int port, 
@@ -42,12 +42,12 @@ public:
 		
 		boost::asio::async_connect(
 			new_session->GetSocketRef(), endpoint_iter, boost::bind(
-				&Connector::OnConnect, this->shared_from_this(), 
+				&Client::OnConnect, this->shared_from_this(), 
 				on_connect_func, new_session, boost::asio::placeholders::error));	
 	}
 
 private:
-    Connector(boost::asio::io_service& service, int buffer_size, std::ostream& os)
+    Client(boost::asio::io_service& service, int buffer_size, std::ostream& os)
 		: service(service), buffer_size(buffer_size), os(os){}
 	
 	auto OnConnect(OnConnectFunc on_connect_func, Session::Pointer session, 

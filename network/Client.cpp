@@ -1,13 +1,13 @@
-#ifdef CONNECTOR_UNIT_TEST
-#include "Connector.h"
+#ifdef CLIENT_UNIT_TEST
+#include "Client.h"
 #include <iostream>
 #include "../utility/Utility.h"
 
 using namespace nr;
 using namespace nr::ntw;
 
-auto ConnectorTestCuiApp(boost::asio::io_service& service, Connector::Pointer connector, 
-		Connector::OnConnectFunc on_connect_func, 
+auto ClientTestCuiApp(boost::asio::io_service& service, Client::Pointer client, 
+		Client::OnConnectFunc on_connect_func, 
 		Session::OnReceiveFunc on_receive_func,
 		Session::OnCloseFunc on_close_func,
 		boost::function<void (const ByteArray&)> broadcast_func,
@@ -35,7 +35,7 @@ auto ConnectorTestCuiApp(boost::asio::io_service& service, Connector::Pointer co
 				const auto hostname = utl::GetInput<std::string>("hostname?:");
 				const auto port = utl::GetInput<int>("port?:");	
 				std::cout << hostname << ":" << port << std::endl;
-				connector->Connect(hostname, port, 
+				client->Connect(hostname, port, 
 					on_connect_func, on_receive_func, on_close_func);
 			}
 			else if(command == "broadcast"){
@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
 
 	const int buffer_size = 128;
 	auto session_pool = SessionPool::Create();
-	auto connector = Connector::Create(service, buffer_size, std::cout);
+	auto client = Client::Create(service, buffer_size, std::cout);
 
-	ConnectorTestCuiApp(service, connector, 
+	ClientTestCuiApp(service, client, 
 		[&session_pool](Session::Pointer session){  // on_connect
 			std::cout << "on_connect!!!" << std::endl; 
 			session_pool->Add(session);
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 		},
 		[&service, &session_pool](const ByteArray& byte_array){ //broadcast
 			Broadcast(session_pool, byte_array);
-			//Send(connector, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
+			//Send(client, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
 		},
 		[&session_pool](){ // close 
 			std::cout << "close" << std::endl; 
