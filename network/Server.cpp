@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 		},
 		std::cout
 	);
-	server->Start();
+	server->StartAccept();
 
 	std::cout << "accept port is " << server_port << std::endl;
 	boost::thread t(boost::bind(&boost::asio::io_service::run, &service));

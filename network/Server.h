@@ -26,7 +26,7 @@ public:
 				on_accept_func, on_receive_func, on_close_func, os));	
 	}
 	
-	auto Start() -> void {
+	auto StartAccept() -> void {
 		auto new_session = Session::Create(this->service, this->buffer_size,
 			this->on_receive_func, this->on_close_func, this->os);
 
@@ -63,7 +63,7 @@ private:
 		else{
 			this->os << "accept failure" << std::endl;		
 		}
-		this->Start();
+		this->StartAccept();
 	}
 
 	boost::asio::io_service& service;
