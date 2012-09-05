@@ -22,11 +22,21 @@ public:
 			Session::OnReceiveFunc on_receive_func,
 			Session::OnCloseFunc on_close_func,
 			std::ostream& os) -> Pointer {
-		auto created = Pointer(
-			new Server(service, port, buffer_size, 
+		return  Pointer(new Server(service, port, buffer_size, 
 				on_accept_func, on_receive_func, on_close_func, os));	
-		created->Start();
-		return created;
+	}
+	
+	auto Start() -> void {
+		auto new_session = Session::Create(this->service, this->buffer_size,
+			this->on_receive_func, this->on_close_func, this->os);
+
+		this->acceptor.async_accept(
+			new_session->GetSocketRef(),
+			boost::bind(
+				&Server::OnAccept, this->shared_from_this(), on_accept_func, new_session,
+				boost::asio::placeholders::error
+			)
+		);
 	}
 
 private:
@@ -36,23 +46,11 @@ private:
 			Session::OnCloseFunc on_close_func,
 			std::ostream& os)
 		:service(service), 
-		boost_acceptor(service, boost::asio::ip::tcp::endpoint(
+		acceptor(service, boost::asio::ip::tcp::endpoint(
 			boost::asio::ip::tcp::v4(), port)),
 		buffer_size(buffer_size), on_accept_func(on_accept_func), 
 		on_receive_func(on_receive_func), on_close_func(on_close_func), os(os){}
 	
-	auto Start() -> void {
-		auto new_session = Session::Create(this->service, this->buffer_size,
-			this->on_receive_func, this->on_close_func, this->os);
-
-		this->boost_acceptor.async_accept(
-			new_session->GetSocketRef(),
-			boost::bind(
-				&Server::OnAccept, this->shared_from_this(), on_accept_func, new_session,
-				boost::asio::placeholders::error
-			)
-		);
-	}
 
 	auto OnAccept(OnAcceptFunc on_accept_func, Session::Pointer session, 
 			const boost::system::error_code& error_code) -> void {
@@ -69,7 +67,7 @@ private:
 	}
 
 	boost::asio::io_service& service;
-	boost::asio::ip::tcp::acceptor boost_acceptor;
+	boost::asio::ip::tcp::acceptor acceptor;
 	int buffer_size;
 	OnAcceptFunc on_accept_func;
 	Session::OnReceiveFunc on_receive_func;
