@@ -81,7 +81,8 @@ private:
 	auto OnAccept(OnAcceptFunc on_accept_func, Session::Pointer session, 
 			const boost::system::error_code& error_code) -> void {
 		if(!error_code){
-			this->os << "accept:" << GetAddressStr(session) << std::endl;
+			this->os << "accept:" << GetRemoteAddressStr(session) << ":"
+				<< GetRemotePort(session) << std::endl;
 			this->on_accept_func(session);
 			session->StartReceive();
 		}
@@ -94,7 +95,8 @@ private:
 	auto OnConnect(OnConnectFunc on_connect_func, Session::Pointer session, 
 			const boost::system::error_code& error_code) -> void {
 		if(!error_code){
-			this->os << "connect:" << GetAddressStr(session) << std::endl;
+			this->os << "connect:" << GetRemoteAddressStr(session) << ":" 
+				<< GetRemotePort(session) << std::endl;
 			on_connect_func(session);
 			session->StartReceive();
 		}
