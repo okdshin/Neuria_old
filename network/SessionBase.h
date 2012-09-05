@@ -20,9 +20,14 @@ public:
 
 };
 
-auto GetAddressStr(SessionBase::Pointer session) -> std::string {
+auto GetRemoteAddressStr(SessionBase::Pointer session) -> std::string {
 	return session->GetSocketRef().remote_endpoint().address().to_string();	
 }
 
+auto GetRemotePort(SessionBase::Pointer session) -> int {
+	return session->GetSocketRef().remote_endpoint().port();
 }
+
+}
+
 }

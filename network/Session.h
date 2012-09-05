@@ -141,7 +141,8 @@ private:
 	}
 
 	auto DoClose() -> void {
-		this->os << GetAddressStr(shared_from_this()) << " closed" << std::endl;
+		this->os << GetRemoteAddressStr(this->shared_from_this()) << ":"
+			<< GetRemotePort(this->shared_from_this()) << " closed" << std::endl;
 		this->sock.close();
 		this->on_close_func(shared_from_this());
 	}
@@ -156,6 +157,7 @@ private:
 	std::ostream& os;
 
 };
+
 
 auto CreateTestSession(boost::asio::io_service& service) -> Session::Pointer {
 	return Session::Create(service, 128, 
