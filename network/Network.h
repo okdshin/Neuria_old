@@ -3,7 +3,9 @@
 #include <iostream>
 #include "Session.h"
 #include "SessionPool.h"
-#include "P2pCore.h"
+#include "Server.h"
+#include "Client.h"
+#include "Peer.h"
 
 namespace nr{
 namespace ntw{
