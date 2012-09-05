@@ -8,7 +8,7 @@ using namespace nr;
 using namespace nr::ntw;
 
 auto PeerTestCuiApp(boost::asio::io_service& service, Peer::Pointer peer, 
-	Peer::OnConnectFunc on_connect_func, 
+	Client::OnConnectFunc on_connect_func, 
 	Session::OnReceiveFunc on_receive_func,
 	Session::OnCloseFunc on_close_func,
 	boost::function<void (const ByteArray&)> broadcast_func,
@@ -112,6 +112,8 @@ int main(int argc, char* argv[])
 		},
 		(std::cout)
 	);
+
+	peer->StartAccept();
 
 	std::cout << "accept port is " << server_port << std::endl;
 	PeerTestCuiApp(service, peer, 
