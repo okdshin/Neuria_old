@@ -72,7 +72,7 @@ private:
 		this->acceptor.async_accept(
 			new_session->GetSocketRef(),
 			boost::bind(
-				&P2pCore::OnAccept, shared_from_this(), on_accept_func, new_session,
+				&P2pCore::OnAccept, this->shared_from_this(), on_accept_func, new_session,
 				boost::asio::placeholders::error
 			)
 		);
@@ -119,7 +119,7 @@ auto Send(P2pCore::Pointer core_ptr, const std::string& address, int port,
 			session->Send(byte_array);
 			session->Close();
 		},
-		[](const ByteArray&){},
+		[](Session::Pointer, const ByteArray&){},
 		[](Session::Pointer){});
 }
 

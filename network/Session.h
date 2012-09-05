@@ -18,7 +18,7 @@ class Session : public SessionBase, public boost::enable_shared_from_this<Sessio
 {
 public:
 	using Pointer = boost::shared_ptr<Session>;
-	using OnReceiveFunc = boost::function<void (const ByteArray&)>;
+	using OnReceiveFunc = boost::function<void (Pointer, const ByteArray&)>;
 	using OnCloseFunc = boost::function<void (Pointer)>;
 
 	~Session(){
@@ -92,7 +92,7 @@ private:
 			
 			if(bytes_transferred < this->part_of_array.size()){
 				this->sock.get_io_service().dispatch(boost::bind(
-					this->on_receive_func, this->received_byte_array));
+					this->on_receive_func, this->shared_from_this(), this->received_byte_array));
 				this->received_byte_array.resize(0);
 			}
 			
@@ -159,7 +159,7 @@ private:
 
 auto CreateTestSession(boost::asio::io_service& service) -> Session::Pointer {
 	return Session::Create(service, 128, 
-		[](const ByteArray&)
+		[](Session::Pointer session, const ByteArray&)
 			{ std::cout << "on receive !!!" << std::endl; }, 
 		[](Session::Pointer){ std::cout << "on close !!!" << std::endl; }, 
 		std::cout);

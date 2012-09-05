@@ -69,7 +69,7 @@ auto P2pCoreTestCuiApp(
 			std::cout << "on_connect!!!" << std::endl; 
 			session_pool->Add(session);
 		}, 
-		[](const ByteArray& byte_array){ // on_receive
+		[](Session::Pointer session, const ByteArray& byte_array){ // on_receive
 			std::cout << "on_receive!!!" << std::endl; 
 		},
 		[&session_pool](Session::Pointer session){ // on_close
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 			std::cout << "on_accept_func called:" << std::endl;
 			session_pool->Add(session);
 		},
-		[](const ByteArray& byte_array){ 
+		[](Session::Pointer session, const ByteArray& byte_array){ 
 			std::cout << "on receive from accepted session:" 
 				<< utl::ByteArray2String(byte_array) << std::endl;
 		},
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 			std::cout << "on_connect!!!" << std::endl; 
 			session_pool->Add(session);
 		}, 
-		[](const ByteArray& byte_array){ // on_receive
+		[](Session::Pointer session, const ByteArray& byte_array){ // on_receive
 			std::cout << "on_receive!!!" << std::endl; 
 		},
 		[&session_pool](Session::Pointer session){ // on_close
