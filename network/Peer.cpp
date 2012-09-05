@@ -1,5 +1,5 @@
-#ifdef P2PCORE_UNIT_TEST
-#include "P2pCore.h"
+#ifdef PEER_UNIT_TEST
+#include "Peer.h"
 #include <iostream>
 #include <boost/thread/thread.hpp>
 #include "../utility/Utility.h"
@@ -7,8 +7,8 @@
 using namespace nr;
 using namespace nr::ntw;
 
-auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_ptr, 
-	P2pCore::OnConnectFunc on_connect_func, 
+auto PeerTestCuiApp(boost::asio::io_service& service, Peer::Pointer peer, 
+	Peer::OnConnectFunc on_connect_func, 
 	Session::OnReceiveFunc on_receive_func,
 	Session::OnCloseFunc on_close_func,
 	boost::function<void (const ByteArray&)> broadcast_func,
@@ -35,7 +35,7 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 				const auto hostname = utl::GetInput<std::string>("hostname?:");
 				const auto port = utl::GetInput<int>("port?:");	
 
-				core_ptr->Connect(hostname, port, 
+				peer->Connect(hostname, port, 
 					on_connect_func, on_receive_func, on_close_func);
 			}
 			else if(command == "broadcast"){
@@ -61,10 +61,10 @@ auto P2pCoreTestCuiApp(boost::asio::io_service& service, P2pCore::Pointer core_p
 }
 
 
-auto P2pCoreTestCuiApp(
-		boost::asio::io_service& service, P2pCore::Pointer core_ptr) -> void { 
+auto PeerTestCuiApp(
+		boost::asio::io_service& service, Peer::Pointer peer) -> void { 
 	auto session_pool = SessionPool::Create();
-	P2pCoreTestCuiApp(service, core_ptr, 
+	PeerTestCuiApp(service, peer, 
 		[&session_pool](Session::Pointer session){  // on_connect
 			std::cout << "on_connect!!!" << std::endl; 
 			session_pool->Add(session);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
 	const int buffer_size = 128;
 	auto session_pool = SessionPool::Create();
-	auto core_ptr = P2pCore::Create(service, server_port, buffer_size, 
+	auto peer = Peer::Create(service, server_port, buffer_size, 
 		[&session_pool](Session::Pointer session){
 			std::cout << "on_accept_func called:" << std::endl;
 			session_pool->Add(session);
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	);
 
 	std::cout << "accept port is " << server_port << std::endl;
-	P2pCoreTestCuiApp(service, core_ptr, 
+	PeerTestCuiApp(service, peer, 
 		[&session_pool](Session::Pointer session){  // on_connect
 			std::cout << "on_connect!!!" << std::endl; 
 			session_pool->Add(session);
@@ -125,9 +125,9 @@ int main(int argc, char* argv[])
 		[&session_pool](Session::Pointer session){ // on_close
 			session_pool->Erase(session);
 		},
-		[&service, &core_ptr, &session_pool](const ByteArray& byte_array){ //broadcast
+		[&service, &peer, &session_pool](const ByteArray& byte_array){ //broadcast
 			Broadcast(session_pool, byte_array);
-			//Send(core_ptr, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
+			//Send(peer, "127.0.0.1", 54321, utl::String2ByteArray("hello"));
 		},
 		[&session_pool](){ // close 
 			std::cout << "close" << std::endl; 

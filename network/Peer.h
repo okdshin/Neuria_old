@@ -1,5 +1,5 @@
 #pragma once
-//P2pCore:20120816
+//Peer:20120816
 #include <iostream>
 #include <vector>
 #include <boost/asio.hpp>
@@ -12,9 +12,9 @@
 namespace nr{
 namespace ntw{
 
-class P2pCore : public boost::enable_shared_from_this<P2pCore> {
+class Peer : public boost::enable_shared_from_this<Peer> {
 public:
-	using Pointer = boost::shared_ptr<P2pCore>;
+	using Pointer = boost::shared_ptr<Peer>;
 	using OnAcceptFunc = boost::function<void (Session::Pointer)>;
 	using OnConnectFunc = boost::function<void (Session::Pointer)>;
 	
@@ -24,7 +24,7 @@ public:
 			Session::OnCloseFunc on_close_func,
 			std::ostream& os) -> Pointer {
 		auto created = Pointer(
-			new P2pCore(service, port, buffer_size, 
+			new Peer(service, port, buffer_size, 
 				on_accept_func, on_receive_func, on_close_func, os));	
 		created->StartAccept();
 		return created;
@@ -46,12 +46,12 @@ public:
 
 		boost::asio::async_connect(
 			new_session->GetSocketRef(), endpoint_iter, boost::bind(
-				&P2pCore::OnConnect, this->shared_from_this(), 
+				&Peer::OnConnect, this->shared_from_this(), 
 				on_connect_func, new_session, boost::asio::placeholders::error));	
 	}
 
 private:
-	P2pCore(boost::asio::io_service& service, int port, int buffer_size,
+	Peer(boost::asio::io_service& service, int port, int buffer_size,
 			OnAcceptFunc on_accept_func, 
 			Session::OnReceiveFunc on_receive_func, 
 			Session::OnCloseFunc on_close_func,
@@ -68,7 +68,7 @@ private:
 		this->acceptor.async_accept(
 			new_session->GetSocketRef(),
 			boost::bind(
-				&P2pCore::OnAccept, this->shared_from_this(), on_accept_func, new_session,
+				&Peer::OnAccept, this->shared_from_this(), on_accept_func, new_session,
 				boost::asio::placeholders::error
 			)
 		);
@@ -110,7 +110,7 @@ private:
 	std::ostream& os;
 };
 
-auto Send(P2pCore::Pointer core_ptr, const std::string& address, int port, 
+auto Send(Peer::Pointer core_ptr, const std::string& address, int port, 
 		const ByteArray& byte_array) -> void {
 	core_ptr->Connect(address, port, 
 		[byte_array](Session::Pointer session){
