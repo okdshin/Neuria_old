@@ -98,7 +98,8 @@ int main(int argc, char* argv[])
 
 	const int buffer_size = 128;
 	auto session_pool = SessionPool::Create();
-	auto peer = Peer::Create(service, server_port, buffer_size, 
+	auto peer = Peer::Create(service, server_port, buffer_size, std::cout);
+	SetCallbacks(peer,
 		[&session_pool](Session::Pointer session){
 			std::cout << "on_accept_func called:" << std::endl;
 			session_pool->Add(session);
@@ -109,8 +110,7 @@ int main(int argc, char* argv[])
 		},
 		[&session_pool](Session::Pointer session){
 			session_pool->Erase(session);
-		},
-		(std::cout)
+		}
 	);
 
 	peer->StartAccept();

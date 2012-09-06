@@ -1,7 +1,7 @@
 CXX = g++ -std=gnu++0x
 CXXFLAGS = -Wall -g -D SERVERBASE_UNIT_TEST
 INCLUDES = 
-LIBS =
+LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
 OBJS = ServerBase.o
 PROGRAM = ServerBase.out
 

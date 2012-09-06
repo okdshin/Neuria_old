@@ -14,19 +14,15 @@
 namespace nr{
 namespace ntw{
 
-class Peer : public boost::enable_shared_from_this<Peer> {
+class Peer : public ServerBase, public boost::enable_shared_from_this<Peer> {
 public:
 	using Pointer = boost::shared_ptr<Peer>;
 	
-	static auto Create(boost::asio::io_service& service, int port, int buffer_size, 
-			Server::OnAcceptFunc on_accept_func, 
-			Session::OnReceiveFunc on_receive_accepted_func,
-			Session::OnCloseFunc on_close_accepted_func,
-			std::ostream& os) -> Pointer {
-		auto server = Server::Create(service, port, buffer_size, 
-			on_accept_func, on_receive_accepted_func, on_close_accepted_func, os);
-		auto client = Client::Create(service, buffer_size, os);
-		return Pointer(new Peer(server, client, os));	
+	static auto Create(boost::asio::io_service& service, 
+			int port, int buffer_size, std::ostream& os) -> Pointer {
+		return Pointer(new Peer(
+			Server::Create(service, port, buffer_size, os), 
+			Client::Create(service, buffer_size, os), os));
 	}
 
 	auto Connect(const std::string& hostname, int port, 
@@ -38,6 +34,7 @@ public:
 			on_connect_func, on_receive_func, on_close_func);
 	}
 
+	
 	auto StartAccept() -> void {
 		this->server->StartAccept();
 	}
@@ -45,7 +42,18 @@ public:
 private:
 	Peer(Server::Pointer server, Client::Pointer client, std::ostream& os)
 		: server(server), client(client), os(os){}
+	
+	auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
+		this->server->SetOnReceiveFunc(on_receive_func);	
+	}
 
+	auto DoSetOnAcceptFunc(Server::OnAcceptFunc on_accept_func) -> void {
+		this->server->SetOnAcceptFunc(on_accept_func);	
+	}
+	
+	auto DoSetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
+		this->server->SetOnCloseFunc(on_close_func);	
+	}
 
 	Server::Pointer server;
 	Client::Pointer client;

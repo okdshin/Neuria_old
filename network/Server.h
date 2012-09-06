@@ -22,17 +22,6 @@ public:
 		return  Pointer(new Server(service, port, buffer_size, os));	
 	}
 
-	auto SetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
-		this->on_receive_func = on_receive_func;
-	}
-
-	auto SetOnAcceptFunc(ServerBase::OnAcceptFunc on_accept_func) -> void {
-		this->on_accept_func = on_accept_func;
-	}
-	
-	auto SetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
-		this->on_close_func = on_close_func;
-	}
 
 	auto StartAccept() -> void {
 		auto new_session = Session::Create(this->service, this->buffer_size,
@@ -57,6 +46,17 @@ private:
 		on_receive_func([](Session::Pointer, const ByteArray&){}), 
 		on_close_func([](Session::Pointer){}), os(os){}
 	
+	auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
+		this->on_receive_func = on_receive_func;
+	}
+
+	auto DoSetOnAcceptFunc(ServerBase::OnAcceptFunc on_accept_func) -> void {
+		this->on_accept_func = on_accept_func;
+	}
+	
+	auto DoSetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
+		this->on_close_func = on_close_func;
+	}
 
 	auto OnAccept(Session::Pointer session, 
 			const boost::system::error_code& error_code) -> void {
