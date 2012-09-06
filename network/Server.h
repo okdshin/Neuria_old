@@ -7,15 +7,15 @@
 #include <boost/thread.hpp>
 #include "Session.h"
 #include "SessionPool.h"
+#include "ServerBase.h"
 #include "../ByteArray.h"
 
 namespace nr{
 namespace ntw{
 
-class Server : public boost::enable_shared_from_this<Server> {
+class Server : public ServerBase, public boost::enable_shared_from_this<Server> {
 public:
 	using Pointer = boost::shared_ptr<Server>;
-	using OnAcceptFunc = boost::function<void (Session::Pointer)>;
 
 	static auto Create(boost::asio::io_service& service, 
 			int port, int buffer_size, std::ostream& os) -> Pointer {
@@ -26,7 +26,7 @@ public:
 		this->on_receive_func = on_receive_func;
 	}
 
-	auto SetOnAcceptFunc(OnAcceptFunc on_accept_func) -> void {
+	auto SetOnAcceptFunc(ServerBase::OnAcceptFunc on_accept_func) -> void {
 		this->on_accept_func = on_accept_func;
 	}
 	
@@ -75,21 +75,13 @@ private:
 	boost::asio::io_service& service;
 	boost::asio::ip::tcp::acceptor acceptor;
 	int buffer_size;
-	OnAcceptFunc on_accept_func;
+	ServerBase::OnAcceptFunc on_accept_func;
 	Session::OnReceiveFunc on_receive_func;
 	Session::OnCloseFunc on_close_func;
 	std::ostream& os;
 
 };
 
-auto SetCallbacks(Server::Pointer target, 
-		Server::OnAcceptFunc on_accept, 
-		Session::OnReceiveFunc on_receive, 
-		Session::OnCloseFunc on_close) -> void {
-	target->SetOnAcceptFunc(on_accept);
-	target->SetOnReceiveFunc(on_receive);
-	target->SetOnCloseFunc(on_close);
-}
 
 
 }
