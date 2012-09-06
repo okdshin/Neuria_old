@@ -18,19 +18,23 @@ int main(int argc, char* argv[])
 
 	const int buffer_size = 128;
 	auto session_pool = SessionPool::Create();
-	auto server = Server::Create(service, server_port, buffer_size, 
+	auto server = Server::Create(service, server_port, buffer_size, std::cout);
+	server->SetOnAcceptFunc(
 		[&session_pool](Session::Pointer session){
 			std::cout << "on_accept_func called:" << std::endl;
 			session_pool->Add(session);
-		},
+		}
+	);
+	server->SetOnReceiveFunc(
 		[](Session::Pointer session, const ByteArray& byte_array){ 
 			std::cout << "on receive from accepted session:" 
 				<< utl::ByteArray2String(byte_array) << std::endl;
-		},
+		}
+	);
+	server->SetOnCloseFunc(
 		[&session_pool](Session::Pointer session){
 			session_pool->Erase(session);
-		},
-		std::cout
+		}
 	);
 	server->StartAccept();
 
