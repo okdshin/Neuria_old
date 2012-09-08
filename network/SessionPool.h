@@ -5,7 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/bind.hpp>
-#include "SessionBase.h"
+#include "Session.h"
 
 namespace nr{
 namespace ntw{
@@ -17,16 +17,16 @@ public:
 		return Pointer(new SessionPool());	
 	}
 
-	auto Add(SessionBase::Pointer session) -> void {
+	auto Add(Session::Pointer session) -> void {
 		this->sessions.push_back(session);	
 	}
 
-	auto Erase(SessionBase::Pointer session) -> void { // not close session.
+	auto Erase(Session::Pointer session) -> void { // not close session.
 		std::cout << "session erase from pool" << std::endl;
 		sessions.erase(std::find(sessions.begin(), sessions.end(), session));
 	}
 
-	auto At(unsigned int index) -> SessionBase::Pointer {
+	auto At(unsigned int index) -> Session::Pointer {
 		return this->sessions.at(index);	
 	}
 
@@ -39,7 +39,7 @@ public:
 	}
 
 	//range-based-forで使われることを想定している。
-	using iterator = std::vector<SessionBase::Pointer>::iterator;
+	using iterator = std::vector<Session::Pointer>::iterator;
 	auto begin() -> iterator {
 		return this->sessions.begin();
 	}
@@ -50,7 +50,7 @@ public:
 
 private:
 	SessionPool():sessions(){}
-	std::vector<SessionBase::Pointer> sessions;
+	std::vector<Session::Pointer> sessions;
 };
 
 auto Broadcast(

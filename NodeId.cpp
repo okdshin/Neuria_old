@@ -1,9 +1,8 @@
-#ifdef SESSIONBASE_UNIT_TEST
-#include "SessionBase.h"
+#ifdef NODEID_UNIT_TEST
+#include "NodeId.h"
 #include <iostream>
 
 using namespace nr;
-using namespace nr::ntw;
 
 int main(int argc, char* argv[])
 {

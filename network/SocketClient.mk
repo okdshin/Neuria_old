@@ -1,9 +1,9 @@
-CXX = ccache g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D SESSIONBASE_UNIT_TEST
+CXX = g++ -std=gnu++0x
+CXXFLAGS = -Wall -g -D SOCKETCLIENT_UNIT_TEST -O0
 INCLUDES = 
 LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
-OBJS = SessionBase.o
-PROGRAM = SessionBase.out
+OBJS = SocketClient.o
+PROGRAM = SocketClient.out
 
 all:$(PROGRAM)
 

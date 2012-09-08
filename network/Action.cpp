@@ -1,5 +1,5 @@
-#ifdef CLIENT_UNIT_TEST
-#include "Client.h"
+#ifdef ACTION_UNIT_TEST
+#include "Action.h"
 #include <iostream>
 
 using namespace nr;

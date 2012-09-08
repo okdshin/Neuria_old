@@ -1,88 +1,45 @@
 #pragma once
-//Server:20120905
+//Server:20120906
 #include <iostream>
-#include <vector>
-#include <boost/asio.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
 #include "Session.h"
-#include "SessionPool.h"
-#include "ServerBase.h"
-#include "../ByteArray.h"
 
 namespace nr{
 namespace ntw{
 
-class Server : public ServerBase, public boost::enable_shared_from_this<Server> {
+class Server {
 public:
 	using Pointer = boost::shared_ptr<Server>;
+	using OnAcceptFunc = boost::function<void (Session::Pointer)>;
 
-	static auto Create(boost::asio::io_service& service, 
-			int port, int buffer_size, std::ostream& os) -> Pointer {
-		return  Pointer(new Server(service, port, buffer_size, os));	
+	auto SetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
+		this->DoSetOnReceiveFunc(on_receive_func);	
 	}
-
-
-	auto StartAccept() -> void {
-		auto new_session = Session::Create(this->service, this->buffer_size,
-			this->on_receive_func, this->on_close_func, this->os);
-
-		this->acceptor.async_accept(
-			new_session->GetSocketRef(),
-			boost::bind(
-				&Server::OnAccept, this->shared_from_this(), new_session,
-				boost::asio::placeholders::error
-			)
-		);
+	
+	auto SetOnAcceptFunc(OnAcceptFunc on_accept_func) -> void {
+		this->DoSetOnAcceptFunc(on_accept_func);	
+	}
+	
+	auto SetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
+		this->DoSetOnCloseFunc(on_close_func);	
 	}
 
 private:
-    Server(boost::asio::io_service& service, 
-			int port, int buffer_size, std::ostream& os)
-		: service(service), 
-		acceptor(service, boost::asio::ip::tcp::endpoint(
-			boost::asio::ip::tcp::v4(), port)), buffer_size(buffer_size), 
-		on_accept_func([](Session::Pointer){}), 
-		on_receive_func([](Session::Pointer, const ByteArray&){}), 
-		on_close_func([](Session::Pointer){}), os(os){}
+	virtual auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void = 0;
+	virtual auto DoSetOnAcceptFunc(OnAcceptFunc on_accept_func) -> void = 0;
+	virtual auto DoSetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void = 0;
 	
-	auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
-		this->on_receive_func = on_receive_func;
-	}
-
-	auto DoSetOnAcceptFunc(ServerBase::OnAcceptFunc on_accept_func) -> void {
-		this->on_accept_func = on_accept_func;
-	}
-	
-	auto DoSetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
-		this->on_close_func = on_close_func;
-	}
-
-	auto OnAccept(Session::Pointer session, 
-			const boost::system::error_code& error_code) -> void {
-		if(!error_code){
-			this->os << "accept:" << GetRemoteAddressStr(session) << ":"
-				<< GetRemotePort(session) << std::endl;
-			this->on_accept_func(session);
-			session->StartReceive();
-		}
-		else{
-			this->os << "accept failure" << std::endl;		
-		}
-		this->StartAccept();
-	}
-
-	boost::asio::io_service& service;
-	boost::asio::ip::tcp::acceptor acceptor;
-	int buffer_size;
-	ServerBase::OnAcceptFunc on_accept_func;
-	Session::OnReceiveFunc on_receive_func;
-	Session::OnCloseFunc on_close_func;
-	std::ostream& os;
-
+	virtual auto StartAccept() -> void = 0;
 };
 
-
+auto SetCallbacks(Server::Pointer target, 
+		Server::OnAcceptFunc on_accept, 
+		Session::OnReceiveFunc on_receive, 
+		Session::OnCloseFunc on_close) -> void {
+	target->SetOnAcceptFunc(on_accept);
+	target->SetOnReceiveFunc(on_receive);
+	target->SetOnCloseFunc(on_close);
+}
 
 }
 }
+

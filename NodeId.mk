@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D CLIENT_UNIT_TEST
+CXXFLAGS = -Wall -g -D NODEID_UNIT_TEST
 INCLUDES = 
-LIBS = -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
-OBJS = Client.o
-PROGRAM = Client.out
+LIBS =
+OBJS = NodeId.o
+PROGRAM = NodeId.out
 
 all:$(PROGRAM)
 

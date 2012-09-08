@@ -6,6 +6,7 @@
 #include <ctime>
 #include <boost/random.hpp>
 #include "../ByteArray.h"
+#include "../NodeId.h"
 #include "MatchFuncCaller.h"
 #include "LabeledSink.h"
 
@@ -26,6 +27,10 @@ auto String2ByteArray(const std::string& str) -> ByteArray {
 
 auto ByteArray2String(const ByteArray& byte_array) -> std::string {
 	return std::string(byte_array.begin(), byte_array.end());
+}
+
+auto CreateSocketNodeId(const std::string& hostname, int port) -> NodeId {
+	return hostname + "/" + boost::lexical_cast<std::string>(port);	
 }
 
 class RandomElementSelector{

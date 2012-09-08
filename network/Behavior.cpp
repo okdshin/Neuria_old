@@ -1,5 +1,5 @@
-#ifdef SERVERBASE_UNIT_TEST
-#include "ServerBase.h"
+#ifdef BEHAVIOR_UNIT_TEST
+#include "Behavior.h"
 #include <iostream>
 
 using namespace nr;
