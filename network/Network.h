@@ -5,7 +5,11 @@
 #include "SessionPool.h"
 #include "Server.h"
 #include "Client.h"
-#include "Peer.h"
+
+#include "SocketSession.h"
+#include "SessionPool.h"
+#include "SocketServer.h"
+#include "SocketClient.h"
 
 namespace nr{
 namespace ntw{
