@@ -22,8 +22,17 @@ public:
 		return  Pointer(new SocketServer(service, port, buffer_size, os));	
 	}
 
-
-	auto StartAccept() -> void {
+private:
+    SocketServer(boost::asio::io_service& service, 
+			int port, int buffer_size, std::ostream& os)
+		: service(service), 
+		acceptor(service, boost::asio::ip::tcp::endpoint(
+			boost::asio::ip::tcp::v4(), port)), buffer_size(buffer_size), 
+		on_accept_func([](Session::Pointer){}), 
+		on_receive_func([](Session::Pointer, const ByteArray&){}), 
+		on_close_func([](Session::Pointer){}), os(os){}
+	
+	auto DoStartAccept() -> void {
 		auto new_session = SocketSession::Create(this->service, this->buffer_size,
 			this->on_receive_func, this->on_close_func, this->os);
 
@@ -35,16 +44,6 @@ public:
 			)
 		);
 	}
-
-private:
-    SocketServer(boost::asio::io_service& service, 
-			int port, int buffer_size, std::ostream& os)
-		: service(service), 
-		acceptor(service, boost::asio::ip::tcp::endpoint(
-			boost::asio::ip::tcp::v4(), port)), buffer_size(buffer_size), 
-		on_accept_func([](Session::Pointer){}), 
-		on_receive_func([](Session::Pointer, const ByteArray&){}), 
-		on_close_func([](Session::Pointer){}), os(os){}
 	
 	auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void {
 		this->on_receive_func = on_receive_func;

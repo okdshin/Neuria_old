@@ -19,6 +19,7 @@ class Shell{
 public:
 	using ArgumentList = std::vector<std::string>;
 	using CalledFunc = std::function<void (const ArgumentList&)>;
+	
 	Shell(std::ostream& os):func_dict(), os(os){
 		this->Register("help", "shows this help ;)", boost::bind(&Shell::Help, this, _1));
 	}

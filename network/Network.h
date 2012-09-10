@@ -5,6 +5,8 @@
 #include "SessionPool.h"
 #include "Server.h"
 #include "Client.h"
+#include "Action.h"
+#include "Behavior.h"
 
 #include "SocketSession.h"
 #include "SessionPool.h"

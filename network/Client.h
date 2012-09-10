@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include "../NodeId.h"
 #include "Session.h"
+#include "SessionPool.h"
 
 namespace nr{
 namespace ntw{
@@ -28,6 +29,23 @@ private:
 	virtual auto DoConnect(const NodeId& node_id, OnConnectFunc on_connect_func, 
 		Session::OnReceiveFunc on_receive_func, Session::OnCloseFunc) -> void = 0;
 };
+
+auto Connect(Client::Pointer client, const NodeId& node_id, SessionPool::Pointer pool, 
+		Session::OnReceiveFunc on_receive_func) -> void {
+	client->Connect(node_id, 
+		[pool](Session::Pointer session){ pool->Add(session); }, 
+		on_receive_func, 
+		[pool](Session::Pointer session){ pool->Erase(session); });	
+}
+
+auto Send(Client::Pointer client, const NodeId& node_id, 
+		const ByteArray& byte_array) -> void {
+	client->Connect(node_id,
+		[byte_array](Session::Pointer session){ session->Send(byte_array); }, 
+		[](Session::Pointer, const ByteArray&){}, 
+		[](Session::Pointer){}
+	);				
+}
 
 }
 }

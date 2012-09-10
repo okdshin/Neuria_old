@@ -2,6 +2,7 @@
 //Server:20120906
 #include <iostream>
 #include "Session.h"
+#include "SessionPool.h"
 
 namespace nr{
 namespace ntw{
@@ -22,13 +23,17 @@ public:
 	auto SetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void {
 		this->DoSetOnCloseFunc(on_close_func);	
 	}
+	
+	auto StartAccept() -> void {
+		this->DoStartAccept();	
+	}
 
 private:
 	virtual auto DoSetOnReceiveFunc(Session::OnReceiveFunc on_receive_func) -> void = 0;
 	virtual auto DoSetOnAcceptFunc(OnAcceptFunc on_accept_func) -> void = 0;
 	virtual auto DoSetOnCloseFunc(Session::OnCloseFunc on_close_func) -> void = 0;
-	
-	virtual auto StartAccept() -> void = 0;
+
+	virtual auto DoStartAccept() -> void = 0;
 };
 
 auto SetCallbacks(Server::Pointer target, 
@@ -38,6 +43,12 @@ auto SetCallbacks(Server::Pointer target,
 	target->SetOnAcceptFunc(on_accept);
 	target->SetOnReceiveFunc(on_receive);
 	target->SetOnCloseFunc(on_close);
+}
+
+auto SetCallbacks(Server::Pointer target, SessionPool::Pointer pool,
+		Session::OnReceiveFunc on_receive) -> void {
+	SetCallbacks(target, [pool](Session::Pointer session){ pool->Add(session); }, 
+		on_receive, [pool](Session::Pointer session){ pool->Erase(session); });
 }
 
 }
