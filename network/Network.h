@@ -5,13 +5,14 @@
 #include "SessionPool.h"
 #include "Server.h"
 #include "Client.h"
-#include "Action.h"
-#include "Behavior.h"
 
 #include "SocketSession.h"
 #include "SessionPool.h"
 #include "SocketServer.h"
 #include "SocketClient.h"
+
+#include "DispatchCommand.h"
+#include "BehaviorDispatcher.h"
 
 namespace nr{
 namespace ntw{

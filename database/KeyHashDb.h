@@ -11,8 +11,8 @@
 namespace nr{
 namespace db{
 
-auto CalcId(const ByteArray& src_data) -> KeyHash::Id {
-	return KeyHash::Id(GetHashStr(src_data));	
+auto CalcId(const ByteArray& src_data) -> KeyHash::KeyHashId {
+	return KeyHash::KeyHashId(GetHashStr(src_data));	
 }
 
 using KeywardList = std::vector<KeyHash::Keyward>;
@@ -74,10 +74,10 @@ public:
 
 	auto Add(const KeyHash::Keyward& keyward, const ByteArray& src_data) -> void {
 		this->hash_list.push_back(KeyHash(
-			KeyHash::Keyward(keyward), KeyHash::Id(CalcId(src_data))));
+			KeyHash::Keyward(keyward), KeyHash::KeyHashId(CalcId(src_data))));
 	}
 
-	auto EraseSameAsKeyHashData(const KeyHash::Id& data) -> void {
+	auto EraseSameAsKeyHashData(const KeyHash::KeyHashId& data) -> void {
 		this->hash_list.erase(
 			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
 				[&data](const KeyHash& key_hash){return key_hash.GetId() == data;}), 

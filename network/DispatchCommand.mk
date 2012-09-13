@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D BEHAVIOR_UNIT_TEST
+CXXFLAGS = -Wall -g -D DISPATCHCOMMAND_UNIT_TEST
 INCLUDES = 
-LIBS =
-OBJS = Behavior.o
-PROGRAM = Behavior.out
+LIBS = -lboost_iostreams -lboost_serialization -lcrypto -lboost_thread -ldl -lpthread -lboost_system
+OBJS = DispatchCommand.o
+PROGRAM = DispatchCommand.out
 
 all:$(PROGRAM)
 

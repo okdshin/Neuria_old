@@ -1,7 +1,7 @@
 CXX = g++ -std=gnu++0x
 CXXFLAGS = -Wall -g -D KEYHASH_UNIT_TEST
 INCLUDES = 
-LIBS =
+LIBS = -lboost_iostreams -lboost_serialization
 OBJS = KeyHash.o
 PROGRAM = KeyHash.out
 

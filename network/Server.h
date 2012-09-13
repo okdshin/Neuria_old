@@ -51,6 +51,12 @@ auto SetCallbacks(Server::Pointer target, SessionPool::Pointer pool,
 		on_receive, [pool](Session::Pointer session){ pool->Erase(session); });
 }
 
+auto SetOnReceiveFuncOnly(Server::Pointer target,
+		Session::OnReceiveFunc on_receive) -> void {
+	SetCallbacks(target, [](Session::Pointer){}, 
+		on_receive, [](Session::Pointer){});		
+}
+
 }
 }
 

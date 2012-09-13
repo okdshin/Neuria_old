@@ -12,7 +12,7 @@ def main():
     else:
         os.system("chmod +x {target}.out".format(target = target_name))
         print("unit_test.py:result is...")
-        return_code = os.system("strace -o {target}.log -F ./{target}.out".format(target = target_name))
+        return_code = os.system("./{target}.out".format(target = target_name))
         print("unit_test.py:return_code is {code}.".format(code = return_code))
         if(return_code == 11):
             print("unit_test.py:segumentation fault?")

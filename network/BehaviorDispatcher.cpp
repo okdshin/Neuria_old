@@ -1,5 +1,5 @@
-#ifdef BEHAVIOR_UNIT_TEST
-#include "Behavior.h"
+#ifdef BEHAVIORDISPATCHER_UNIT_TEST
+#include "BehaviorDispatcher.h"
 #include <iostream>
 
 using namespace nr;
