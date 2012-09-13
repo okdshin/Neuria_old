@@ -25,6 +25,7 @@ public:
 
 	auto RegisterFunc(const DispatchCommand::CommandId& command_id, 
 			Session::OnReceiveFunc func) -> void{
+		std::cout << "registered " << command_id << std::endl;
 		this->func_dict[command_id] = func;
 	}
 
@@ -33,7 +34,7 @@ private:
 
 	auto Dispatch(Session::Pointer session, 
 			const ByteArray& byte_array) -> void {
-		std::cout << "received dispatch command serialized byte array:" 
+		std::cout << "received dispatch command serialized byte array: " 
 			<< utl::ByteArray2String(byte_array) << std::endl;
 		auto command = DispatchCommand::Parse(byte_array);
 		std::cout << "received dispatch command: " << command << std::endl;
@@ -49,9 +50,19 @@ private:
 		}
 	}
 	
+	friend auto operator<<(
+		std::ostream& os, const BehaviorDispatcher& dispatcher) -> std::ostream&;
 	std::map<DispatchCommand::CommandId, Session::OnReceiveFunc> func_dict;
 	std::ostream& os;
 };
+
+auto operator<<(std::ostream& os, 
+		const BehaviorDispatcher& dispatcher) -> std::ostream& {
+	for(auto& pair : dispatcher.func_dict){
+		std::cout << pair.first << ", " << std::flush;
+	}
+	return os;
+}
 
 }
 }
