@@ -38,13 +38,20 @@ auto Connect(Client::Pointer client, const NodeId& node_id, SessionPool::Pointer
 		[pool](Session::Pointer session){ pool->Erase(session); });	
 }
 
+auto Communicate(Client::Pointer client, const NodeId& node_id, 
+		const ByteArray& byte_array, Session::OnReceiveFunc on_receive_func) -> void {
+	client->Connect(node_id, 
+		[byte_array](Session::Pointer session){ session->Send(byte_array); }, 
+		on_receive_func,
+		[](Session::Pointer){});	
+}
+
 auto Send(Client::Pointer client, const NodeId& node_id, 
 		const ByteArray& byte_array) -> void {
 	client->Connect(node_id,
 		[byte_array](Session::Pointer session){ session->Send(byte_array); }, 
 		[](Session::Pointer, const ByteArray&){}, 
-		[](Session::Pointer){}
-	);				
+		[](Session::Pointer){});				
 }
 
 }

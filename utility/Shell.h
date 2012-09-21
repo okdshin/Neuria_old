@@ -21,7 +21,7 @@ public:
 	using CalledFunc = std::function<void (const ArgumentList&)>;
 	
 	Shell(std::ostream& os):func_dict(), os(os){
-		this->Register("help", "shows this help ;)", boost::bind(&Shell::Help, this, _1));
+		this->Register("help", ": shows this help ;)", boost::bind(&Shell::Help, this, _1));
 	}
 
 	auto Register(const std::string& key, const std::string& explanation, 
@@ -55,7 +55,7 @@ private:
 
 	auto Help(const ArgumentList& argment_list) -> void {
 		for(auto& func_pair : this->func_dict){
-			this->os << boost::format("%1%:%2%") 
+			this->os << boost::format("%1% %2%") 
 				% func_pair.first // key
 				% std::get<0>(func_pair.second) // explanation 
 				<< std::endl;
@@ -67,7 +67,7 @@ private:
 };
 
 auto RegisterExitFunc(Shell& shell) -> void {
-	shell.Register("exit", "exit this app.", [](const Shell::ArgumentList&){exit(0);});
+	shell.Register("exit", ": exit this app.", [](const Shell::ArgumentList&){exit(0);});
 }
 
 }

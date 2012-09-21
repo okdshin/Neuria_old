@@ -10,7 +10,7 @@
 #include <boost/function.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "Session.h"
-
+#include "../utility/Utility.h"
 namespace nr{
 namespace ntw{
 
@@ -43,6 +43,12 @@ public:
 		return this->sock;
 	}
 
+	auto GetNodeId() -> NodeId {
+		return utl::CreateSocketNodeId(
+			GetRemoteAddressStr(this->shared_from_this()), 
+			GetRemotePort(this->shared_from_this()));	
+	}
+
 	auto StartReceive() -> void {
 		this->os << "start receive" << std::endl;
 		DoOnReceive();
@@ -69,11 +75,11 @@ private:
 		OnCloseFunc on_close_func,
 		std::ostream& os)
 			:sock(service), on_receive_func(on_receive_func), on_close_func(on_close_func), 
-			part_of_array(buffer_size), received_byte_array(), on_send_strand(service), 
+			part_of_array(buffer_size), received_byte_array(), //on_send_strand(service), 
 			os(os){}
 
 	auto DoOnReceive() -> void {
-		this->os << "do on receive" << std::endl;
+		//this->os << "do on receive" << std::endl;
 		this->sock.async_read_some(
 			boost::asio::buffer(part_of_array),
 			boost::bind(
@@ -89,12 +95,13 @@ private:
 	auto OnReceive(
 		const boost::system::error_code& error_code, std::size_t bytes_transferred)
 	-> void {
-		this->os << "on receive" << std::endl;
+		//this->os << "on receive" << std::endl;
 		if(!error_code){
 			std::copy(part_of_array.begin(), part_of_array.begin()+bytes_transferred, 
 				std::back_inserter(this->received_byte_array));
 			
 			if(bytes_transferred < this->part_of_array.size()){
+				this->os << "received." << std::endl;
 				this->sock.get_io_service().dispatch(boost::bind(
 					this->on_receive_func, this->shared_from_this(), this->received_byte_array));
 				this->received_byte_array.resize(0);
@@ -118,11 +125,18 @@ private:
 				&send_byte_array_queue.front().front(), 
 				send_byte_array_queue.front().size()
 			),
+			/*
 			this->on_send_strand.wrap(boost::bind(
 				&SocketSession::OnSend,
 				shared_from_this(), 
 				boost::asio::placeholders::error
 			))
+			*/
+			boost::bind(
+				&SocketSession::OnSend,
+				shared_from_this(), 
+				boost::asio::placeholders::error
+			)
 		);
 	}
 
@@ -157,7 +171,7 @@ private:
 	ByteArray part_of_array;
 	ByteArray received_byte_array;
 	std::deque<ByteArray> send_byte_array_queue;
-	boost::asio::strand on_send_strand;
+	//boost::asio::strand on_send_strand;
 	std::ostream& os;
 
 };

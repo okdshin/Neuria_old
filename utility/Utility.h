@@ -9,6 +9,7 @@
 #include "../NodeId.h"
 #include "MatchFuncCaller.h"
 #include "LabeledSink.h"
+#include "TypeWrapper.h"
 
 namespace nr{
 namespace utl{
@@ -39,8 +40,7 @@ public:
 		: gen(boost::mt19937(static_cast<unsigned long>(std::time(0)))){}
 
 	template<class Container>
-	auto operator()(
-			Container& container) -> typename Container::iterator::value_type {
+	auto operator()(Container& container) -> typename Container::iterator::value_type {
 		auto dst = boost::uniform_smallint<>(
 			0, container.end()-container.begin()-1);//small_intで十分
 		auto rand = boost::variate_generator<

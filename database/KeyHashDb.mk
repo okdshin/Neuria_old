@@ -1,7 +1,7 @@
 CXX = g++ -std=gnu++0x
 CXXFLAGS = -Wall -g -D KEYHASHDB_UNIT_TEST
 INCLUDES = 
-LIBS = -lcrypto
+LIBS = -lboost_filesystem -lcrypt -lboost_system -lboost_thread -lboost_iostreams -lboost_serialization -lpthread -lcrypto -lboost_serialization -lboost_thread -ldl -lpthread -lboost_system
 OBJS = KeyHashDb.o
 PROGRAM = KeyHashDb.out
 

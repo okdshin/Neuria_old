@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
 	auto session = CreateTestSocketSession(service); 
 	service.run();
 	session->StartReceive();	
+	session->GetNodeId();
 	
     return 0;
 }

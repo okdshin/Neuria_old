@@ -57,13 +57,12 @@ auto operator<<(std::ostream& os, const DispatchCommand& command) -> std::ostrea
 		<< utl::ByteArray2String(command.GetWrappedByteArray()) << std::endl;
 	return os;
 }
-
-auto SendDispatchCommand(Session::Pointer session, 
-		const DispatchCommand::CommandId& command_id, 
-		const ByteArray& byte_array) -> void {
-	session->Send(DispatchCommand(command_id, byte_array).Serialize());
+/*
+template<class Command>
+auto CreateSerializedDispatchCommand(const Command& command) -> ByteArray {
+	return DispatchCommand(GetCommandId<Command>(), command.Serialize()).Serialize();
 }
-
+*/
 }
 }
 

@@ -5,6 +5,7 @@
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include "../ByteArray.h"
+#include "../NodeId.h"
 
 namespace nr{
 namespace ntw{
@@ -15,7 +16,8 @@ public:
 	using Pointer = boost::shared_ptr<Session>;
 	using OnReceiveFunc = boost::function<void (Pointer, const ByteArray&)>;
 	using OnCloseFunc = boost::function<void (Pointer)>;
-	
+
+	virtual auto GetNodeId() -> NodeId = 0;
 	virtual auto StartReceive() -> void = 0;
 	virtual auto Send(const ByteArray& byte_array) -> void = 0;
  	virtual auto Close() -> void = 0;

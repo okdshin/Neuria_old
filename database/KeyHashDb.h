@@ -5,14 +5,15 @@
 #include <vector>
 #include <tuple>
 #include <algorithm>
+#include <boost/format.hpp>
 #include "KeyHash.h"
 #include "Hash.h"
 
 namespace nr{
 namespace db{
 
-auto CalcId(const ByteArray& src_data) -> KeyHash::KeyHashId {
-	return KeyHash::KeyHashId(GetHashStr(src_data));	
+auto CalcId(const ByteArray& src_data) -> KeyHash::HashId {
+	return KeyHash::HashId(GetHashStr(src_data));	
 }
 
 using KeywardList = std::vector<KeyHash::Keyward>;
@@ -72,23 +73,23 @@ public:
 	KeyHashDb(double threshold, std::ostream& os)
 		:hash_list(), threshold(threshold), os(os){}
 
-	auto Add(const KeyHash::Keyward& keyward, const ByteArray& src_data) -> void {
-		this->hash_list.push_back(KeyHash(
-			KeyHash::Keyward(keyward), KeyHash::KeyHashId(CalcId(src_data))));
+	auto Add(const KeyHash& key_hash) -> void {
+		this->hash_list.push_back(key_hash);
 	}
 
-	auto EraseSameAsKeyHashData(const KeyHash::KeyHashId& data) -> void {
+	auto Erase(const KeyHash::HashId& hash_id) -> void {
 		this->hash_list.erase(
 			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
-				[&data](const KeyHash& key_hash){return key_hash.GetId() == data;}), 
+				[&hash_id](const KeyHash& key_hash){
+					return key_hash.GetHashId() == hash_id; }), 
 			this->hash_list.end());	
 	}
 
-	auto EraseSameAsSrcData(const ByteArray& src_data) -> void {
+	auto Erase(const ByteArray& src_data) -> void {
 		this->hash_list.erase(
 			std::remove_if(this->hash_list.begin(), this->hash_list.end(), 
 				[&src_data](const KeyHash& key_hash)
-					{return key_hash.GetId() == CalcId(src_data);}), 
+					{ return key_hash.GetHashId() == CalcId(src_data); }), 
 			this->hash_list.end());	
 	}
 
@@ -114,6 +115,15 @@ public:
 		return KeyHashList(this->hash_list.begin(), end);
 	}
 
+	auto Get(const KeyHash::HashId& hash_id) -> KeyHash {
+		auto found = std::find_if(this->hash_list.begin(), this->hash_list.end(), 
+			[&hash_id](const KeyHash& key_hash){
+				return key_hash.GetHashId() == hash_id; });	
+		if(found == this->hash_list.end()){
+			assert(!"not found");	
+		}
+		return *found;
+	}
 private:
 	KeyHashList hash_list;
 	double threshold;
@@ -123,7 +133,10 @@ private:
 std::ostream& operator<<(std::ostream& os, const KeyHashDb::KeyHashList& key_hash_list){
 	for(const auto& key_hash : key_hash_list)
 	{
-		os << key_hash.GetKeyward() << ":" << key_hash.GetId() << " ";
+		os << boost::format("Keyward:%1%, HashId:%2%, OwnerId:%3%") 
+			% key_hash.GetKeyward().Get() 
+			% key_hash.GetHashId().Get()
+			% key_hash.GetOwnerId() << std::endl;
 	}
 
 	return os;

@@ -10,7 +10,7 @@
 namespace nr{
 namespace db{
 
-auto GetHashStr(const ByteArray& data) -> std::string
+auto CalcHashStr(const ByteArray& data) -> std::string
 {
 	SHA256_CTX sha256;
 	SHA256_Init(&sha256);

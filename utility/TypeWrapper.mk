@@ -1,9 +1,9 @@
 CXX = g++ -std=gnu++0x
-CXXFLAGS = -Wall -g -D KEYHASH_UNIT_TEST
+CXXFLAGS = -Wall -g -D TYPEWRAPPER_UNIT_TEST
 INCLUDES = 
-LIBS = -lboost_system -lboost_thread -lboost_iostreams -lboost_serialization
-OBJS = KeyHash.o
-PROGRAM = KeyHash.out
+LIBS =
+OBJS = TypeWrapper.o
+PROGRAM = TypeWrapper.out
 
 all:$(PROGRAM)
 

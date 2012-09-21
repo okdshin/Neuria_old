@@ -8,9 +8,9 @@ using namespace nr::db;
 
 int main(int argc, char* argv[])
 {
-	std::cout << GetHashStr(utl::String2ByteArray("string")) << std::endl;
-	std::cout << GetHashStr(utl::String2ByteArray("strinh")) << std::endl;
-	std::cout << GetHashStr(utl::String2ByteArray("")) << std::endl;
+	std::cout << CalcHashStr(utl::String2ByteArray("string")) << std::endl;
+	std::cout << CalcHashStr(utl::String2ByteArray("strinh")) << std::endl;
+	std::cout << CalcHashStr(utl::String2ByteArray("")) << std::endl;
     return 0;
 }
 

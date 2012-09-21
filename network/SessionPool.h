@@ -38,6 +38,14 @@ public:
 		return this->sessions.empty();	
 	}
 
+	auto Get(const NodeId& node_id) -> Session::Pointer{
+		auto iter = std::find_if(this->sessions.begin(), this->sessions.end(), 
+			[&node_id](Session::Pointer session){ 
+				return session->GetNodeId() == node_id; });	
+		assert(iter != this->sessions.end());
+		return *iter;
+	}
+
 	//range-based-forで使われることを想定している。
 	using iterator = std::vector<Session::Pointer>::iterator;
 	auto begin() -> iterator {
