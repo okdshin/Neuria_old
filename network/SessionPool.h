@@ -56,21 +56,37 @@ public:
 		return this->sessions.end();
 	}
 
+	using const_iterator = std::vector<Session::Pointer>::const_iterator;
+	auto begin()const -> const_iterator {
+		return this->sessions.begin();
+	}
+	
+	auto end()const -> const_iterator {
+		return this->sessions.end();
+	}
 private:
 	SessionPool():sessions(){}
 	std::vector<Session::Pointer> sessions;
 };
 
 auto Broadcast(
-		SessionPool::Pointer session_pool, const ByteArray& byte_array) -> void {	
+		SessionPool::Pointer session_pool, const ByteArray& byte_array, 
+		Session::OnSendFinishedFunc on_send_finished_func) -> void {	
 	if(!session_pool->IsEmpty()){
 		for(auto& session : *session_pool){
-			session->Send(byte_array);
+			session->Send(byte_array, on_send_finished_func);
 		}
 	}
 	else{
 		std::cout << "no peer. broadcast failed." << std::endl;	
 	}
+}
+
+auto operator<<(std::ostream& os, SessionPool::Pointer pool) -> std::ostream& {
+	for(const auto& session : *pool){
+		os << session->GetNodeId() << " ";
+	}
+	return os;
 }
 
 }

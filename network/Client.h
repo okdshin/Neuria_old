@@ -39,9 +39,10 @@ auto Connect(Client::Pointer client, const NodeId& node_id, SessionPool::Pointer
 }
 
 auto Communicate(Client::Pointer client, const NodeId& node_id, 
-		const ByteArray& byte_array, Session::OnReceiveFunc on_receive_func) -> void {
+		const ByteArray& byte_array, Session::OnReceiveFunc on_receive_func,
+		Session::OnSendFinishedFunc on_send_finished_func) -> void {
 	client->Connect(node_id, 
-		[byte_array](Session::Pointer session){ session->Send(byte_array); }, 
+		[byte_array, on_send_finished_func](Session::Pointer session){ session->Send(byte_array, on_send_finished_func); }, 
 		on_receive_func,
 		[](Session::Pointer){});	
 }
@@ -49,7 +50,11 @@ auto Communicate(Client::Pointer client, const NodeId& node_id,
 auto Send(Client::Pointer client, const NodeId& node_id, 
 		const ByteArray& byte_array) -> void {
 	client->Connect(node_id,
-		[byte_array](Session::Pointer session){ session->Send(byte_array); }, 
+		[byte_array](Session::Pointer session){
+			session->Send(byte_array, 
+				[](Session::Pointer session){ session->Close(); }
+			);
+		}, 
 		[](Session::Pointer, const ByteArray&){}, 
 		[](Session::Pointer){});				
 }

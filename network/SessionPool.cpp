@@ -7,7 +7,8 @@ using namespace nr::ntw;
 
 int main(int argc, char* argv[])
 {
-
+	auto pool = SessionPool::Create();
+	
     return 0;
 }
 

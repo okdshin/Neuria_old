@@ -11,9 +11,6 @@
 #include "SocketServer.h"
 #include "SocketClient.h"
 
-#include "DispatchCommand.h"
-#include "BehaviorDispatcher.h"
-
 namespace nr{
 namespace ntw{
 

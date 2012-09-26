@@ -44,9 +44,14 @@ public:
 	}
 
 	auto GetNodeId() -> NodeId {
-		return utl::CreateSocketNodeId(
-			GetRemoteAddressStr(this->shared_from_this()), 
-			GetRemotePort(this->shared_from_this()));	
+		try{
+			return utl::CreateSocketNodeId(
+				GetRemoteAddressStr(this->shared_from_this()), 
+				GetRemotePort(this->shared_from_this()));	
+		}
+		catch(...){
+			assert(!"socket is not connected.");
+		}
 	}
 
 	auto StartReceive() -> void {
@@ -54,17 +59,19 @@ public:
 		DoOnReceive();
 	}
 
-	auto Send(const ByteArray& byte_array) -> void {
+	auto Send(const ByteArray& byte_array,
+			Session::OnSendFinishedFunc on_send_finished_func) -> void {
 		assert(this->sock.is_open());
 		this->os << "send" << std::endl;
 		bool is_empty = this->send_byte_array_queue.empty();
 		this->send_byte_array_queue.push_back(byte_array);
 		if(is_empty) { //start new
-			this->DoOnSend();
+			this->DoOnSend(on_send_finished_func);
 		}
 	}
-
+	
 	auto Close() -> void {
+		assert(this->sock.is_open());
 		this->sock.get_io_service().post(
 			boost::bind(&SocketSession::DoClose, shared_from_this()));
 	}
@@ -118,34 +125,32 @@ private:
 		}
 	}
 
-	auto DoOnSend() -> void {
+	auto DoOnSend(Session::OnSendFinishedFunc on_send_finished_func) -> void {
 		boost::asio::async_write(
 			this->sock, 
 			boost::asio::buffer(
 				&send_byte_array_queue.front().front(), 
 				send_byte_array_queue.front().size()
 			),
-			/*
-			this->on_send_strand.wrap(boost::bind(
-				&SocketSession::OnSend,
-				shared_from_this(), 
-				boost::asio::placeholders::error
-			))
-			*/
 			boost::bind(
 				&SocketSession::OnSend,
 				shared_from_this(), 
+				on_send_finished_func,
 				boost::asio::placeholders::error
 			)
 		);
 	}
 
-	auto OnSend(const boost::system::error_code& error_code) -> void {
+	auto OnSend(Session::OnSendFinishedFunc on_send_finished_func, 
+			const boost::system::error_code& error_code) -> void {
 		if(!error_code){
 			if(!this->send_byte_array_queue.empty()){
 				this->send_byte_array_queue.pop_front();
 				if(!this->send_byte_array_queue.empty()){
-					this->DoOnSend();
+					this->DoOnSend(on_send_finished_func);
+				}
+				else{
+					on_send_finished_func(this->shared_from_this());
 				}
 			}
 		}
